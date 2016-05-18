@@ -1,0 +1,40 @@
+COMPILER ?= javac
+SRC_PATH ?= src
+BIN_PATH ?= bin
+JGRAPHT_CLASS_PATH ?= jgrapht/jgrapht-core/src/main/java
+FLAGS ?= -Xlint -cp "$(SRC_PATH):$(JGRAPHT_CLASS_PATH)" -d $(BIN_PATH)
+JAR_NAME ?= RegexStaticAnalysis.jar
+
+SRCS= $(wildcard src/*.java) \
+	$(wildcard src/driver/*.java) \
+	$(wildcard src/analysis/*.java) \
+	$(wildcard src/analysis/driver/*.java) \
+	$(wildcard src/regexcompiler/*.java) \
+	$(wildcard src/util/*.java) \
+	$(wildcard src/preprocessor/*.java) \
+	$(wildcard src/nfa/*.java)
+CLASSES=$(SRCS:src/%.java=bin/%.class)
+
+all: directories $(CLASSES)
+
+directories:
+	@mkdir -p bin
+
+bin/%.class: $(SRC_PATH)/%.java
+	$(COMPILER) $(FLAGS) $<
+
+new: clean all
+
+exejar: all
+	printf "Main-Class: driver.Main\n" > Manifest.txt
+	jar cfm $(JAR_NAME) Manifest.txt ./src* -C ./bin .
+	rm -f Manifest.txt
+	chmod u+x $(JAR_NAME)
+
+clean:
+	find ./ -name "*.class" -type f -delete
+
+clean_jar:
+	rm -f $(JAR_NAME)
+
+# vim: tabstop=4
