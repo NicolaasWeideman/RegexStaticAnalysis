@@ -33,6 +33,8 @@ import util.InterruptibleMatchingString;
 import nfa.NFAGraph;
 
 public class AnalysisDriverStdOut {
+
+	private static final boolean DEBUG = false;
 	
 	/* Interface Settings */
 	private static InputType inputType;
@@ -245,13 +247,22 @@ public class AnalysisDriverStdOut {
 						numSkipped++;
 						break;
 					}
-				} catch (PatternSyntaxException pse){					
+				} catch (PatternSyntaxException pse){
+					if (DEBUG) {
+						pse.printStackTrace();
+					}			
 					System.out.println((counter + 1) + ": SKIPPED: " + pse.getDescription());
 					numSkipped++;
 				} catch (Exception e) {
+						if (DEBUG) {
+							e.printStackTrace();
+						}
 						System.out.println((counter + 1) + ": SKIPPED: " + e.getMessage());
 						numSkipped++;
 				} catch (OutOfMemoryError oome) {
+					if (DEBUG) {
+						oome.printStackTrace();
+					}
 					System.out.println((counter + 1) + ": SKIPPED: " + oome.getMessage());
 					numSkipped++;
 				}
@@ -394,6 +405,9 @@ public class AnalysisDriverStdOut {
 				thread.interrupt();
 				longEndTime = System.currentTimeMillis();
 			} catch (Exception e) {
+				if (DEBUG) {
+					e.printStackTrace();
+				}
 				if (isVerbose) {
 					System.out.println("\t\t\tVulnerable:");
 					System.out.println("\t\t\t" + String.format("%1$-" + pumpLength + "s", ExploitString.visualiseString(exploitStringShort)) + " Time: " + shortTime);
@@ -502,9 +516,15 @@ public class AnalysisDriverStdOut {
 				}
 				
 			} catch (Exception e) {
+				if (DEBUG) {
+					e.printStackTrace();
+				}
 				Thread.currentThread().interrupt();
 				analysisResultsType = AnalysisResultsType.ANALYSIS_FAILED;
 			} catch (OutOfMemoryError oome) {
+				if (DEBUG) {
+					oome.printStackTrace();
+				}
 				Thread.currentThread().interrupt();
 				analysisResultsType = AnalysisResultsType.ANALYSIS_FAILED;
 			}

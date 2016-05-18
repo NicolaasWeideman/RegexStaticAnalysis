@@ -384,6 +384,7 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 
 		if (containsIda) {
 			
+			/*
 			NFAGraph sccMergedM = originalM.copy();
 			Map<NFAVertexND, NFAGraph> mMap = NFAAnalysisTools.mergeStronglyConnectedComponents(sccMergedM, false);
 			HashMap<NFAVertexND, NFAVertexND> sccMap = new HashMap<NFAVertexND, NFAVertexND>();
@@ -398,6 +399,8 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 				}
 			}
 			
+			
+						
 			NFAGraph degreeGraph = sccMergedM.copy();
 			Iterator<NFAVertexND> i0 = storedPs.iterator();
 			Iterator<NFAVertexND> i1 = storedQs.iterator();
@@ -412,8 +415,8 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 
 				degreeGraph.addEdge(new NFAEdge(pScc, qScc, new IdaSpecialTransitionLabel(tls)));				
 			}
-			
-			/* Calculating the degree */
+
+			// Calculating the degree
 			NFAVertexND initialVertex = originalM.getInitialState();
 			
 			NFAVertexND initialSccVertex = sccMap.get(initialVertex);
@@ -421,14 +424,37 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 
 			LinkedList<NFAEdge> maxPath = new LinkedList<NFAEdge>();
 			int d = calculateD(degreeGraph, initialSccVertex, maxPath);
-			/*
-			System.out.println("Begin max path");	
-			for (NFAEdge e : maxPath) {
-				System.out.println(e.getSourceVertex() + " " + e + " " + e.getTargetVertex());
-			}
-			System.out.println("End max path");
+			
+			//System.out.println("Begin max path");	
+			//for (NFAEdge e : maxPath) {
+			//	System.out.println(e.getSourceVertex() + " " + e + " " + e.getTargetVertex());
+			//}
+			//System.out.println("End max path");
+			
+
 			*/
 
+			NFAGraph degreeGraph = originalM.copy();
+			Iterator<NFAVertexND> i0 = storedPs.iterator();
+			Iterator<NFAVertexND> i1 = storedQs.iterator();
+			Iterator<LinkedList<TransitionLabel>> i2 = storedSymbols.iterator();
+			// i0, i1 and i2 will always be of the same size
+			while (i0.hasNext()) {
+				NFAVertexND p = i0.next();
+				NFAVertexND q = i1.next();
+				LinkedList<TransitionLabel> tls = i2.next();
+
+				degreeGraph.addEdge(new NFAEdge(p, q, new IdaSpecialTransitionLabel(tls)));				
+			}
+
+			/* Calculating the degree */
+			NFAVertexND initialVertex = degreeGraph.getInitialState();
+			
+
+			LinkedList<NFAEdge> maxPath = new LinkedList<NFAEdge>();
+			int d = calculateD(degreeGraph, initialVertex, maxPath);
+			
+			
 			return new IdaAnalysisResultsIda(originalM, d, maxPath);
 		} else {
 			return new IdaAnalysisResultsNoIda(originalM);			
@@ -462,7 +488,8 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 				currentPath.remove(currentE); /* since the list is passed as reference we need to remove this from the path */
 				traversed.remove(currentE);
 			} else {
-				throw new RuntimeException("Graph is not supposed to have cycles...");
+				/* We can make this assumption if we work with the component graph, but as we have seen, the component graph is not sufficient when calculating th exploit string explicitly. */
+				//throw new RuntimeException("Graph is not supposed to have cycles...");
 			}
 
 		}
