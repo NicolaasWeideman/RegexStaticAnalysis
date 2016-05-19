@@ -36,3 +36,10 @@ One could then think of the regex `(a*)*` as a regex with infinite degree polyno
 Therefore the matching time is exponential in the length of the input string, similarly to the previous example regex `(a|a)*`.
 
 Without going in too much detail, the analysis relies on inspecting the underlying NFA of a regex for exponential degree of ambiguity (EDA) and infinite degree of amgibuity (IDA) to determine whether the regex is vulnerable to exponential backtracking, or polynomial backtracking, respectively.
+
+## Noteworthy Examples
+What follows are some examples of regexes and their analysis output to aid us in improving our understanding of vulnerable regular expressions. To conserve space we will only explain the necessary output of each analysis.
+* `(a|a)*.*`
+   * `./run.sh -c '(a|a)*.*'`
+   * Result: Does not contain EDA, or IDA.
+   * Explanation: We see the similarities between the regexes `(a|a)*`, which was vulnerable to exponential backtracking and `(a|a)*.*` which is not vulnerable at all. Note the `.*` at the end of the nonvulnerable regular expression. This will consume any suffix of an input string starting with a<sup>n</sup> and therefore the matcher will never backtrack to attempt all possible ways of matching the input string with the rege.
