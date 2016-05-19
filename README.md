@@ -25,4 +25,12 @@ For example, consider the regex `(a|a)*`, which will match any input string of t
 However, every 'a' can be matched by either one of the two a's in the regex. Therefore, everytime n is increased by 1, the number of ways the input string can be matched with the regex, doubles.
 In other words, the number of ways the input string can match the regex is exponential in the length of the input string.
 Should we change the input string in such a way that it no longer matches the regex, for example we change a<sup>n</sup> to a<sup>n</sup>x, the matcher will be forced to try and match the input string in all the possible ways.
-Therefore the matching time is exponential in the length of the input string.
+Therefore, the matching time is exponential in the length of the input string.
+
+In this project we created a tool to perform static analysis on regexes to determine whether catastrophic backtracking could occur.
+Two types of catastrophic backtracking are detected by this project, namely exponential backtracking and polynomial backtracking.
+Polynomial backtracking occurs when the matching time is polynomial in the length of the input string, for example consider the regex `a*a*`, for which the matching time will be quadratic for input strings of the form a<sup>n</sup>x.
+Similarly for the regex `a*a*a*`, the matching time will be cubic for input strings of the form a<sup>n</sup>x.
+In general for the regex `a*...a*` for k repetitions of `a*`, the degree of the polynomial of the matching time for input strings of the form a<sup>n</sup>x, will be k.
+One could then think of the regex `(a*)*` as a regex with infinite degree polynomial matching time for input strings of the form a<sup>n</sup>x.
+Therefore the matching time is exponential in the length of the input string, similarly to the previous example regex `(a|a)*`.
