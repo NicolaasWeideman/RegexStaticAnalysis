@@ -11,8 +11,8 @@ A tool to perform static analysis on regexes to determine whether they are vulne
    `make exejar`  
    depending on whether you want an executable jar to run the code, or not.  
 3. There are three options for running the code:
-   1. `./run.sh`
-   2. `./RegexStaticAnalysis.jar` (if you created the executable jar in the compilation step)
+   1. `./run.sh <command line args>`
+   2. `./RegexStaticAnalysis.jar <command line args>` (if you created the executable jar in the compilation step)
    3. `java -cp ./bin driver.Main <command line args>` (which is basically the bash script inside run.sh)
 4. To learn how to use the code, you can read the usage statement that is printed when the code is run without any command line arguments.
 
