@@ -34,3 +34,5 @@ Similarly for the regex `a*a*a*`, the matching time will be cubic for input stri
 In general for the regex `a*...a*` for k repetitions of `a*`, the degree of the polynomial of the matching time for input strings of the form a<sup>n</sup>x, will be k.
 One could then think of the regex `(a*)*` as a regex with infinite degree polynomial matching time for input strings of the form a<sup>n</sup>x.
 Therefore the matching time is exponential in the length of the input string, similarly to the previous example regex `(a|a)*`.
+
+Without going in too much detail, the analysis relies on inspecting the underlying NFA of a regex for exponential degree of ambiguity (EDA) and infinite degree of amgibuity (IDA) to determine whether the regex is vulnerable to exponential backtracking, or polynomial backtracking, respectively.
