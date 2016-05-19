@@ -20,5 +20,9 @@ A tool to perform static analysis on regexes to determine whether they are vulne
 ## Motivation
 For certain regexes, some regular expression matchers are vulnerable to a phenomenon known as regular expression denial of service (ReDoS).
 In general terms, ReDoS occurs whenever the matching time a regex matcher takes to decide whether an input string matches a regex is inordinately long.
-The indorinately long run time is caused by catastrophic backtracking, which means the matcher has to try a large number of ways to match an input string with a regex one after the other.
-For example, consider the regex `(a|a)*`.
+The inordinately long run time is caused by catastrophic backtracking, which means the matcher has to try a large number of ways to match an input string with a regex one after the other.
+For example, consider the regex `(a|a)*`, which will match any input string of the form a<sup>n</sup> (i.e. n repetitions of 'a').
+However, every 'a' can be matched by either one of the two a's in the regex. Therefore, everytime n is increased by 1, the number of ways the input string can be matched with the regex, doubles.
+In other words, the number of ways the input string can match the regex is exponential in the length of the input string.
+Should we change the input string in such a way that it no longer matches the regex, for example we change a<sup>n</sup> to a<sup>n</sup>x, the matcher will be forced to try and match the input string in all the possible ways.
+Therefore the matching time is exponential in the length of the input string.
