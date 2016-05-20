@@ -4,7 +4,7 @@ A tool to perform static analysis on regexes to determine whether they are vulne
 ## Installation
 1. To obtain the code, clone the repository with:  
    `git clone --recursive https://github.com/NicolaasWeideman/RegexStaticAnalysis.git`  
-   (the --recurive option is necessary to clone submodules as well)
+   (the --recursive option is necessary to clone submodules as well)
 
 2. To compile the code use either  
    `make`, or
@@ -43,3 +43,11 @@ What follows are some examples of regexes and their analysis output to aid us in
    * `./run.sh -c '(a|a)*.*'`
    * Result: Does not contain EDA, or IDA.
    * Explanation: We see the similarities between the regexes `(a|a)*`, which was vulnerable to exponential backtracking and `(a|a)*.*` which is not vulnerable at all. Note the `.*` at the end of the nonvulnerable regular expression. This will consume any suffix of an input string starting with a<sup>n</sup> and therefore the matcher will never backtrack to attempt all possible ways of matching the input string with the regex.
+* `(.*|(a|a)*)`
+   * `./run.sh -c '(.*|(a|a)*)'`
+   * Result: Does not contain EDA, or IDA.
+   * Explanation: Similar to the regex `(a|a)*.*` and since `.*` matches all possible input, it is not possible to construct a suffix for this regex that will force the matcher to try all possible ways of matching the input string with the regex. In fact, this regex will match any input string.
+* `((a|a)*|.*)`
+   * `./run.sh -c '((a|a)*|.*)'`
+   * Result: Vulnerable to exponential backtracking.
+   * Explanation: Since the regexes `((a|a)*|.*)` and `(.*|(a|a)*)` look basically equivalent, one would be tempted to think that they will exhibit exactly the same matching time behaviour. This is, however, not the case. With a regex of the form `(R|S)`, the matcher first attempts to match the input string with the subexpression left of the '|' operator and then the subexpression on the right hand side. Keeping this in mind one can see that for the regex `(.*|(a|a)*)` the matcher will almost immediately accept any input string with the subexpression `.*`, but for the regex `((a|a)*|.*)` the matcher will first attempt to match the input string with the subexpression `(a|a)*` and therefore, if the input string is of the form a<sup>n</sup>x, the matching time will be exponential in n, eventhough the matcher will accept the input string eventually when attempting to match it with the `.*` subexpression, after all possible attempts to match it with `(a|a)*` have failed.
