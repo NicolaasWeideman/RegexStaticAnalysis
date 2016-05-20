@@ -16,6 +16,19 @@ A tool to perform static analysis on regexes to determine whether they are vulne
    3. `java -cp ./bin driver.Main <command line args>` (which is basically the bash script inside run.sh)
 4. To learn how to use the code, you can read the usage statement that is printed when the code is run without any command line arguments.
 
+## Utilities
+### Java Pumper
+The Java pumper allows you to test the matching time of input strings for regular expressions.
+You can run the Java pumper with `./pumper.sh`.
+In the command line arguments, you supply the regex, the prefix/first pump separator, the first pump, the second pump separator, the second pump and so on.  
+Example:  
+`./pumper.sh 'ab*b*cd*d*' 'a' 'b' 'c' 'd' 'e'`  
+will test the matching time of the regex `ab*b*cd*d*` with the input strings:  
+* 'abcde', then
+*  'abbcdde', then
+*  'abbbcddde' and so forth
+It will print the iteration, length of the input string and matching time with each iteration.
+
 
 ## Motivation
 For certain regexes, some regular expression matchers are vulnerable to a phenomenon known as regular expression denial of service (ReDoS).
