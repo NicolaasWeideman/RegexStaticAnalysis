@@ -42,4 +42,4 @@ What follows are some examples of regexes and their analysis output to aid us in
 * `(a|a)*.*`
    * `./run.sh -c '(a|a)*.*'`
    * Result: Does not contain EDA, or IDA.
-   * Explanation: We see the similarities between the regexes `(a|a)*`, which was vulnerable to exponential backtracking and `(a|a)*.*` which is not vulnerable at all. Note the `.*` at the end of the nonvulnerable regular expression. This will consume any suffix of an input string starting with a<sup>n</sup> and therefore the matcher will never backtrack to attempt all possible ways of matching the input string with the rege.
+   * Explanation: We see the similarities between the regexes `(a|a)*`, which was vulnerable to exponential backtracking and `(a|a)*.*` which is not vulnerable at all. Note the `.*` at the end of the nonvulnerable regular expression. This will consume any suffix of an input string starting with a<sup>n</sup> and therefore the matcher will never backtrack to attempt all possible ways of matching the input string with the regex.
