@@ -5,6 +5,7 @@ JGRAPHT_CLASS_PATH ?= jgrapht/jgrapht-core/src/main/java
 FLAGS ?= -Xlint -cp "$(SRC_PATH):$(JGRAPHT_CLASS_PATH)" -d $(BIN_PATH)
 JAR_NAME ?= RegexStaticAnalysis.jar
 
+
 SRCS= $(wildcard src/*.java) \
 	$(wildcard src/driver/*.java) \
 	$(wildcard src/analysis/*.java) \
@@ -15,13 +16,16 @@ SRCS= $(wildcard src/*.java) \
 	$(wildcard src/nfa/*.java)
 CLASSES=$(SRCS:src/%.java=bin/%.class)
 
-all: directories $(CLASSES)
+all: directories $(CLASSES) pumper
 
 directories:
 	@mkdir -p bin
 
 bin/%.class: $(SRC_PATH)/%.java
 	$(COMPILER) $(FLAGS) $<
+
+pumper: utils/pumper/PumperJava.java
+	$(COMPILER) -Xlint -cp utils/pumper/ -d utils/pumper/ $<
 
 new: clean all
 
@@ -32,9 +36,7 @@ exejar: all
 	chmod u+x $(JAR_NAME)
 
 clean:
+	rm -f ./$(JAR_NAME)
 	find ./ -name "*.class" -type f -delete
-
-clean_jar:
-	rm -f $(JAR_NAME)
 
 # vim: tabstop=4
