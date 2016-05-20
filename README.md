@@ -26,7 +26,7 @@ Example:
 will test the matching time of the regex `ab*b*cd*d*` with the input strings:  
 * 'abcde', then
 *  'abbcdde', then
-*  'abbbcddde' and so forth
+*  'abbbcddde' and so forth  
 It will print the iteration, length of the input string and matching time with each iteration.
 
 
