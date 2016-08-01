@@ -208,7 +208,7 @@ public class CharacterClassTransitionLabel implements TransitionLabel, Comparabl
 		if (ranges.isEmpty()) {
 			return "[]";
 		}
-		StringBuilder sb = new StringBuilder();
+		StringBuilder sb = new StringBuilder("[");
 		Iterator<Range> i0 = ranges.iterator();
 		while (i0.hasNext()) {
 			Range r = i0.next();
@@ -224,18 +224,19 @@ public class CharacterClassTransitionLabel implements TransitionLabel, Comparabl
 			} else {
 				highString = String.format("\\x{%02x}", r.high - 1);
 			}
-			if (r.low != r.high - 1) {
-				sb.append("[" + lowString+ "-" + highString + "]");
+			if (r.low == r.high - 2) {
+				/* Print adjacent characters as [ab] (remember high is exclusive) */
+				sb.append(lowString + highString);
+			} else if (r.low != r.high - 1) {
+				/* Print non adjacent characters as [<low>-<high>] */
+				sb.append(lowString+ "-" + highString);
 
 			} else {
-				sb.append("[" + lowString + "]");
-			}
-			if (i0.hasNext()) {
-				sb.append("|");
+				sb.append(lowString);
 			}
 			
 		}
-		
+		sb.append("]");
 		return sb.toString();
 	}
 

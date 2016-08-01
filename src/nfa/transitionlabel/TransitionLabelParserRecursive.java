@@ -595,5 +595,9 @@ public class TransitionLabelParserRecursive {
 
 	}
 
-
+	public static void main(String[] args) {
+		TransitionLabelParserRecursive tpr = new TransitionLabelParserRecursive(args[0]);
+		TransitionLabel parseTransitionLabel = tpr.parseTransitionLabel();
+		System.out.println(parseTransitionLabel);
+	}
 }

@@ -486,11 +486,11 @@ public class AnalysisDriverStdOut {
 			try {
 				long totalAnalysisStartTime = System.currentTimeMillis();
 				analysisGraph = MyPattern.toNFAGraph(pattern, nfaConstruction);	
-
+				//System.out.println(analysisGraph);
 				nfaConstructionTime = System.currentTimeMillis() - totalAnalysisStartTime;
 				long edaAnalysisStartTime = System.currentTimeMillis();
 				analysisResultsType = analyser.containsEDA(analysisGraph);
-
+				
 				edaAnalysisTime = System.currentTimeMillis() - edaAnalysisStartTime;
 				totalAnalysisTime += nfaConstructionTime + edaAnalysisTime;
 				finishedEdaAnalysis = true;

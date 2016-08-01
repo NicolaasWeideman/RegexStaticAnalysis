@@ -38,7 +38,7 @@ public class MyPattern {
 		
 		Parser p = new Parser(pattern, tokenList);
 		ParseTree parseTree = p.parse();
-		System.out.println(parseTree);
+		//System.out.println(parseTree);
 		NFAGraph resultGraph = toNFAGraph(pattern, NFAConstruction.JAVA);
 		System.out.println(resultGraph);
 	}
@@ -53,7 +53,7 @@ public class MyPattern {
 	public static NFAGraph toNFAGraph(String pattern, NFAConstruction construction) {
 		Tokeniser t = new Tokeniser(pattern);
 		List<RegexToken> tokenList = t.tokenise();
-		
+		//System.out.println(tokenList);	
 		Parser p = new Parser(pattern, tokenList);
 		ParseTree parseTree = p.parse();
 		ParseTreeToNFAConverter pttnc;
@@ -278,7 +278,13 @@ public class MyPattern {
 			StringBuilder characterClassBuilder = new StringBuilder();
 			try {
 				i++;
-				while (patternArr[i] != ']') {
+				int depthCounter = 1;
+				while (depthCounter != 0) {
+					if (patternArr[i] == '[') {
+						depthCounter++;
+					} else if (patternArr[i] == ']') {
+						depthCounter--;
+					}
 					if (patternArr[i] == '\\') {
 						/* do not interpret escaped character */
 						i++;
