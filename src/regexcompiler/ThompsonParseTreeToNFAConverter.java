@@ -34,6 +34,21 @@ public class ThompsonParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		m.addAcceptingState(q1);
 		return m;
 	}
+	
+	@Override
+	public NFAGraph createBaseCaseLookAround(NFAVertexND lookAroundState) {
+		NFAGraph m = new NFAGraph();
+		NFAVertexND q0 = new NFAVertexND("q0");
+		NFAVertexND q1 = new NFAVertexND("q1");
+		m.addVertex(q0);
+		m.addVertex(lookAroundState);
+		m.addVertex(q1);
+		m.addEdge(new NFAEdge(q0, lookAroundState, new EpsilonTransitionLabel("ε1")));
+		m.addEdge(new NFAEdge(lookAroundState, q1, new EpsilonTransitionLabel("ε1")));
+		m.setInitialState(q0);
+		m.addAcceptingState(q1);
+		return m;
+	}
 
 	@Override
 	public NFAGraph createBaseCaseEmptyString() {

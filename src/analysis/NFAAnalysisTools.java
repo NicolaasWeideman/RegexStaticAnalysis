@@ -94,6 +94,17 @@ public class NFAAnalysisTools {
 
 		return mohriFilter;
 	}
+
+	public static NFAGraph productConstructionAFB(NFAGraph a, NFAGraph b) throws InterruptedException {
+		NFAGraph m1 = a.copy();
+		NFAGraph m2 = b.copy();
+		NFAGraph f = NFAAnalysisTools.createFilter();
+		NFAAnalysisTools.prepareForFilter(m1, "ε2", "ε1");
+		NFAAnalysisTools.prepareForFilter(m2, "ε1", "ε2");
+		HashMap<NFAEdge, TransitionLabel> originalWords = new HashMap<NFAEdge, TransitionLabel>();
+		NFAGraph af = NFAAnalysisTools.productConstruction(m1, f, originalWords);		
+		return NFAAnalysisTools.productConstruction(af, m2, originalWords);
+	}
 	
 
 	/**
@@ -104,15 +115,8 @@ public class NFAAnalysisTools {
 	 *            The NFA to get the product construction of.
 	 * @return The NFA representing the product construction.
 	 */
-	public static NFAGraph productConstructionAFA(NFAGraph m) throws InterruptedException {
-		NFAGraph m1 = m.copy();
-		NFAGraph m2 = m.copy();
-		NFAGraph f = NFAAnalysisTools.createFilter();
-		NFAAnalysisTools.prepareForFilter(m1, "ε2", "ε1");
-		NFAAnalysisTools.prepareForFilter(m2, "ε1", "ε2");
-		HashMap<NFAEdge, TransitionLabel> originalWords = new HashMap<NFAEdge, TransitionLabel>();
-		NFAGraph af = NFAAnalysisTools.productConstruction(m1, f, originalWords);		
-		return NFAAnalysisTools.productConstruction(af, m2, originalWords);
+	public static NFAGraph productConstructionAFA(NFAGraph m) throws InterruptedException {		
+		return NFAAnalysisTools.productConstructionAFB(m, m);
 	}
 	
 	public static NFAGraph productConstructionAFAFA(NFAGraph m) throws InterruptedException {
@@ -164,7 +168,7 @@ public class NFAAnalysisTools {
 			if (m1.isAcceptingState(m1SourceState) && m2.isAcceptingState(m2SourceState)) {
 				productConstruction.addAcceptingState(sourceVertex);
 			}
-
+			
 			for (NFAEdge currentM1Edge : m1.outgoingEdgesOf(m1SourceState)) {
 				if (Thread.currentThread().isInterrupted()) {
 					throw new InterruptedException();
@@ -236,6 +240,32 @@ public class NFAAnalysisTools {
 		return productConstruction;
 	}
 
+	/* Trims away states not reachable form start */
+	public static NFAGraph makeTrimFromStart(NFAGraph m)  throws InterruptedException {
+		NFAGraph trimmed = m.copy();
+		NFAVertexND mInitialVertex = m.getInitialState();
+		Set<NFAVertexND> vSet = m.vertexSet();
+		HashSet<NFAVertexND> usefulStates = new HashSet<NFAVertexND>();
+		makeTrimFromStartDFS(m, mInitialVertex, usefulStates);
+
+		for (NFAVertexND currentVertex : vSet) {
+			if (!usefulStates.contains(currentVertex)) {
+				trimmed.removeVertex(currentVertex);
+			}
+		}
+		return trimmed;
+	}
+
+	private static void makeTrimFromStartDFS(NFAGraph m, NFAVertexND currentVertex, HashSet<NFAVertexND> usefulStates) {
+		usefulStates.add(currentVertex);
+		for (NFAEdge e : m.outgoingEdgesOf(currentVertex)) {
+			NFAVertexND target = e.getTargetVertex();
+			if (!usefulStates.contains(target)) {
+				makeTrimFromStartDFS(m, target, usefulStates);
+			}
+		}
+	}
+
 	/**
 	 * Removes all useless states from an NFA graph. This is done recursively by
 	 * determining whether each vertex is connected to a useful vertex,
@@ -259,7 +289,10 @@ public class NFAAnalysisTools {
 			}
 			
 			if (!NFAAnalysisTools.makeTrimIsUseful(trimmed, currentVertex, new HashSet<NFAVertexND>(), usefulStates)) {
-				toRemove.add(currentVertex);
+				/* We do not want to remove the initial state */
+				if (!m.getInitialState().equals(currentVertex)) {
+					toRemove.add(currentVertex);
+				}
 			} else {
 				usefulStates.add(currentVertex);
 			}
@@ -419,7 +452,10 @@ public class NFAAnalysisTools {
 
 		for (NFAVertexND v : m.vertexSet()) {
 			if (!usefulStates.contains(v)) {
-				trimmed.removeVertex(v);
+				/* We do not want to remove the initial state (even if it is useless) */
+				if (!m.getInitialState().equals(v)) {
+					trimmed.removeVertex(v);
+				}
 			}
 		}
 

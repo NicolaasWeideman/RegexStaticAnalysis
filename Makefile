@@ -13,7 +13,8 @@ SRCS= $(wildcard src/*.java) \
 	$(wildcard src/regexcompiler/*.java) \
 	$(wildcard src/util/*.java) \
 	$(wildcard src/preprocessor/*.java) \
-	$(wildcard src/nfa/*.java)
+	$(wildcard src/nfa/*.java) \
+	$(wildcard src/matcher/*.java)
 CLASSES=$(SRCS:src/%.java=bin/%.class)
 
 all: directories $(CLASSES) pumper

@@ -1,6 +1,6 @@
 package regexcompiler;
 
-import nfa.NFAGraph;
+import nfa.*;
 import regexcompiler.RegexQuantifiableOperator.RegexPlusOperator;
 import regexcompiler.RegexQuantifiableOperator.RegexQuestionMarkOperator;
 import regexcompiler.RegexQuantifiableOperator.RegexStarOperator;
@@ -8,6 +8,8 @@ import regexcompiler.RegexQuantifiableOperator.RegexStarOperator;
 public interface NFACreator {
 	
 	public NFAGraph createBaseCaseEmpty();
+
+	public NFAGraph createBaseCaseLookAround(NFAVertexND lookAroundState);
 	
 	public NFAGraph createBaseCaseEmptyString();
 	

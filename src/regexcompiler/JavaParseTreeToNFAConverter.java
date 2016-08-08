@@ -25,8 +25,8 @@ public class JavaParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 	@Override
 	public NFAGraph createBaseCaseEmpty() {
 		NFAGraph m = new NFAGraph();
-		NFAVertexND q0 = new NFAVertexND("q0");
-		NFAVertexND q1 = new NFAVertexND("q1");
+		NFAVertexND q0 = nextState();
+		NFAVertexND q1 = nextState();
 		m.addVertex(q0);
 		m.addVertex(q1);
 		
@@ -36,10 +36,25 @@ public class JavaParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 	}
 
 	@Override
+	public NFAGraph createBaseCaseLookAround(NFAVertexND lookAroundState) {
+		NFAGraph m = new NFAGraph();
+		NFAVertexND q0 = nextState();
+		NFAVertexND q1 = nextState();
+		m.addVertex(q0);
+		m.addVertex(lookAroundState);
+		m.addVertex(q1);
+		m.addEdge(new NFAEdge(q0, lookAroundState, new EpsilonTransitionLabel("ε1")));
+		m.addEdge(new NFAEdge(lookAroundState, q1, new EpsilonTransitionLabel("ε1")));
+		m.setInitialState(q0);
+		m.addAcceptingState(q1);
+		return m;
+	}
+
+	@Override
 	public NFAGraph createBaseCaseEmptyString() {
 		NFAGraph m = new NFAGraph();
-		NFAVertexND q0 = new NFAVertexND("q0");
-		NFAVertexND q1 = new NFAVertexND("q1");
+		NFAVertexND q0 = nextState();
+		NFAVertexND q1 = nextState();
 		m.addVertex(q0);
 		m.addVertex(q1);
 		m.addEdge(new NFAEdge(q0, q1, new EpsilonTransitionLabel("ε1")));
@@ -53,8 +68,8 @@ public class JavaParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		TransitionLabelParserRecursive tlpr = new TransitionLabelParserRecursive(symbol);
 		TransitionLabel transitionLabel = tlpr.parseTransitionLabel();
 		NFAGraph m = new NFAGraph();
-		NFAVertexND q0 = new NFAVertexND("q0");
-		NFAVertexND q1 = new NFAVertexND("q1");
+		NFAVertexND q0 = nextState();
+		NFAVertexND q1 = nextState();
 		m.addVertex(q0);
 		m.addVertex(q1);
 		
@@ -78,10 +93,12 @@ public class JavaParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		/* Adding the vertices of m2 */
 		assert m2.getAcceptingStates().size() == 1 : "Construction assumes only one accept state";
 		NFAVertexND m2OriginalAcceptState = m2.getAcceptingStates().iterator().next();
-		String newName = "q";
+		
 		int i = 0;
 		for (NFAVertexND v : m2.vertexSet()) {
 			NFAVertexND newVertex = v;
+			/* We need to keep the prefix for lookaround states (l) */
+			String newName = "" + newVertex.getStateNumberByDimension(1).charAt(0);
 			while (resultNFA.containsVertex(newVertex) || newVertex.equals(m2Acceptstate)) {
 				newVertex = new NFAVertexND(newName + i);
 				i++;
@@ -117,7 +134,7 @@ public class JavaParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		/* Add the new initial vertex */
 		NFAVertexND newInitialVertex = new NFAVertexND("q0");
 		while (resultNFA.containsVertex(newInitialVertex)) {
-			newInitialVertex = new NFAVertexND(newName + i);
+			newInitialVertex = new NFAVertexND("q" + i);
 			i++;
 		}
 		resultNFA.addVertex(newInitialVertex);
@@ -145,12 +162,14 @@ public class JavaParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		
 		/* Adding the vertices of m2 */
 		NFAVertexND m2InitialState = null;
-		String newName = "q";
+		
 		int i = 0;
 		for (NFAVertexND v : m2.vertexSet()) {
 			/* Do not add m2's initial state */
 			
 			NFAVertexND newVertex = v;
+			/* We need to keep the prefix for lookaround states (l) */
+			String newName = "" + v.getStateNumberByDimension(1).charAt(0);
 			while (resultNFA.containsVertex(newVertex) || newVertex.equals(m2InitialState)) {
 				newVertex = new NFAVertexND(newName + i);
 				i++;
@@ -196,7 +215,7 @@ public class JavaParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		/* Add the new initial vertex */
 		NFAVertexND newInitialVertex = new NFAVertexND("q0");
 		while (resultNFA.containsVertex(newInitialVertex)) {
-			newInitialVertex = new NFAVertexND(newName + i);
+			newInitialVertex = new NFAVertexND("q" + i);
 			i++;
 		}
 		resultNFA.addVertex(newInitialVertex);

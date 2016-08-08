@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import nfa.NFAGraph;
+import matcher.*;
 import regexcompiler.ParseTree.TreeNode;
 import regexcompiler.RegexAnchor.RegexAnchorType;
 import regexcompiler.RegexEscapedSymbol.RegexEscapedSymbolType;
@@ -30,24 +31,51 @@ import analysis.AnalysisSettings.NFAConstruction;
  */
 
 public class MyPattern {
+
+	private NFAGraph nfaGraph;
 	
 	public static void main(String [] args) {
-		String pattern = "^a$";
-		Tokeniser t = new Tokeniser(pattern);
-		List<RegexToken> tokenList = t.tokenise();
+		if (args.length < 1) {
+			System.out.println("Pattern should be specified as a command line argument (and possibly give an input string).");
+		}
+		if (args.length < 2) {
+			String pattern = args[0];
+			Tokeniser t = new Tokeniser(pattern);
+			List<RegexToken> tokenList = t.tokenise();
+			
+			Parser p = new Parser(pattern, tokenList);
+			ParseTree parseTree = p.parse();
+			System.out.println(parseTree);
+			NFAGraph resultGraph = toNFAGraph(pattern, NFAConstruction.JAVA);
+			System.out.println(resultGraph);
+		} else {
+			String pattern = args[0];
+			String inputString = args[1];
+			MyPattern myPattern = MyPattern.compile(pattern, NFAConstruction.JAVA);
+			MyMatcher myMatcher = myPattern.matcher(inputString);
+			boolean matches = myMatcher.matches();
+			System.out.println(pattern + " matches " + inputString + ": " + matches);
+		}
 		
-		Parser p = new Parser(pattern, tokenList);
-		ParseTree parseTree = p.parse();
-		//System.out.println(parseTree);
-		NFAGraph resultGraph = toNFAGraph(pattern, NFAConstruction.JAVA);
-		System.out.println(resultGraph);
 	}
 	
 
 	private static final int MAX_REPETITION = Integer.MAX_VALUE;
 
-	private MyPattern() {
+	private MyPattern(NFAGraph nfaGraph) {
+		this.nfaGraph = nfaGraph;
+	}
 
+	public static MyPattern compile(String pattern, NFAConstruction construction) {
+		NFAGraph nfaGraph = toNFAGraph(pattern, construction);
+		return new MyPattern(nfaGraph);
+	}
+
+	public MyMatcher matcher(String inputString) {
+		if (nfaGraph == null) {
+			throw new IllegalStateException("Pattern has not yet been compiled!");
+		}
+		return new RegexNFAMatcher(nfaGraph, inputString);
 	}
 	
 	public static NFAGraph toNFAGraph(String pattern, NFAConstruction construction) {
@@ -279,11 +307,14 @@ public class MyPattern {
 			try {
 				i++;
 				int depthCounter = 1;
-				while (depthCounter != 0) {
+				while (true) {
 					if (patternArr[i] == '[') {
 						depthCounter++;
 					} else if (patternArr[i] == ']') {
 						depthCounter--;
+						if (depthCounter == 0) {
+							break;
+						}
 					}
 					if (patternArr[i] == '\\') {
 						/* do not interpret escaped character */
@@ -292,7 +323,7 @@ public class MyPattern {
 					} else {
 						characterClassBuilder.append(patternArr[i]);
 					}
-					i++;
+					i++;	
 				}
 			} catch (ArrayIndexOutOfBoundsException aioobe) {
 				throw new PatternSyntaxException("Unclosed character class", pattern, i);
@@ -582,10 +613,11 @@ public class MyPattern {
 			}
 			while (!endOfStream && currentToken.getTokenType() == TokenType.SUBEXPRESSION) {
 				TreeNode subexpressionNode = parseFactor();
-				TreeNode unionOperatorNode = new TreeNode(new RegexJoinOperator(index));
-				unionOperatorNode.addChild(root);
-				unionOperatorNode.addChild(subexpressionNode);
-				root = unionOperatorNode;
+				/* TODO implement lookaround here */
+				TreeNode joinOperatorNode = new TreeNode(new RegexJoinOperator(index));
+				joinOperatorNode.addChild(root);
+				joinOperatorNode.addChild(subexpressionNode);
+				root = joinOperatorNode;
 			}
 			//System.out.println("END Parse Term");
 			return root;
@@ -600,16 +632,10 @@ public class MyPattern {
 				if (subexpressionToken.getSubexpressionType() == SubexpressionType.GROUP) {
 					RegexGroup groupToken = (RegexGroup) subexpressionToken;
 					RegexGroupType groupTokenType = groupToken.getGroupType();
+					/* TODO if this works, remove switch and handle all groups equally */
 					switch (groupTokenType) {
-					case NEGLOOKAHEAD:
-						throw new UnimplementedFunctionalityException("Negative lookahead has not yet been implemented.");
-						//break;
-					case NEGLOOKBEHIND:
-						throw new UnimplementedFunctionalityException("Negative lookbehind has not yet been implemented.");
-						//break;
-					case NONCAPTURING:
-						/* we do not perform capturing, so handle noncapturing groups as normal groups */
-					case NORMAL:
+					case NEGLOOKAHEAD: {
+						//throw new UnimplementedFunctionalityException("Negative lookahead has not yet been implemented.");
 						Parser p = new Parser(true, pattern, groupToken.getSubexpressionContent());
 						ParseTree pt = p.parse();
 						/* We add a group node so that the info on which type of group (?: or ?<= Etc) does not go missing  */
@@ -617,12 +643,56 @@ public class MyPattern {
 						groupNode.addChild(pt.getRoot());
 						root = groupNode;
 						break;
-					case POSLOOKAHEAD:
-						throw new UnimplementedFunctionalityException("Positive lookahead has not yet been implemented.");
-						//break;
-					case POSLOOKBEHIND:
-						throw new UnimplementedFunctionalityException("Positive lookbehind has not yet been implemented.");
-						//break;
+					}
+					case NEGLOOKBEHIND: {
+						//throw new UnimplementedFunctionalityException("Negative lookbehind has not yet been implemented.");
+						Parser p = new Parser(true, pattern, groupToken.getSubexpressionContent());
+						ParseTree pt = p.parse();
+						/* We add a group node so that the info on which type of group (?: or ?<= Etc) does not go missing  */
+						TreeNode groupNode = new TreeNode(groupToken);
+						groupNode.addChild(pt.getRoot());
+						root = groupNode;
+						break;
+					}
+					case NONCAPTURING: {
+						/* we do not perform capturing, so handle noncapturing groups as normal groups */
+						Parser p = new Parser(true, pattern, groupToken.getSubexpressionContent());
+						ParseTree pt = p.parse();
+						/* We add a group node so that the info on which type of group (?: or ?<= Etc) does not go missing  */
+						TreeNode groupNode = new TreeNode(groupToken);
+						groupNode.addChild(pt.getRoot());
+						root = groupNode;
+						break;
+					}
+					case NORMAL: {
+						Parser p = new Parser(true, pattern, groupToken.getSubexpressionContent());
+						ParseTree pt = p.parse();
+						/* We add a group node so that the info on which type of group (?: or ?<= Etc) does not go missing  */
+						TreeNode groupNode = new TreeNode(groupToken);
+						groupNode.addChild(pt.getRoot());
+						root = groupNode;
+						break;
+					}
+					case POSLOOKAHEAD: {
+						//throw new UnimplementedFunctionalityException("Positive lookahead has not yet been implemented.");
+						Parser p = new Parser(true, pattern, groupToken.getSubexpressionContent());
+						ParseTree pt = p.parse();
+						/* We add a group node so that the info on which type of group (?: or ?<= Etc) does not go missing  */
+						TreeNode groupNode = new TreeNode(groupToken);
+						groupNode.addChild(pt.getRoot());
+						root = groupNode;
+						break;
+					}
+					case POSLOOKBEHIND: {
+						//throw new UnimplementedFunctionalityException("Positive lookbehind has not yet been implemented.");
+						Parser p = new Parser(true, pattern, groupToken.getSubexpressionContent());
+						ParseTree pt = p.parse();
+						/* We add a group node so that the info on which type of group (?: or ?<= Etc) does not go missing  */
+						TreeNode groupNode = new TreeNode(groupToken);
+						groupNode.addChild(pt.getRoot());
+						root = groupNode;
+						break;
+					}
 					default:
 						throw new RuntimeException("Unknown group type: " + groupTokenType);
 						//break;
@@ -670,5 +740,11 @@ public class MyPattern {
 			return !endOfStream && (currentToken.getTokenType() == TokenType.OPERATOR && ((RegexOperator) currentToken).getIsBinaryOperator());
 		}
 		
+	}
+
+	static class RegexNFAMatcher extends NFAMatcher {
+		private RegexNFAMatcher(NFAGraph nfaGraph, String inputString) {
+			super(nfaGraph, inputString);
+		}
 	}
 }

@@ -105,6 +105,10 @@ public class ParseTree {
 		public RegexToken getRegexToken() {
 			return regexToken;
 		}
+
+		private int getRegexIndex() {
+			return regexToken.getIndex();
+		}
 		
 		public TreeNode(RegexToken regexToken) {
 			this.regexToken = regexToken;
