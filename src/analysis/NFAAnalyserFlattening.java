@@ -35,7 +35,7 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 			throw new InterruptedException();
 		}
 		
-		flatGraph = NFAAnalysisTools.makeTrim(flatGraph);
+		//flatGraph = NFAAnalysisTools.makeTrim(flatGraph);
 
 		if (isInterrupted()) {
 			throw new InterruptedException();
@@ -64,7 +64,6 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 		/* Testing for multiple paths in PC */
 		toReturn = edaTestCaseFilter(originalM, flatGraph);
 		toReturn.setPriorityRemovalStrategy(PriorityRemovalStrategy.IGNORE);
-		
 		return toReturn;
 	}
 	
@@ -74,7 +73,7 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 		if (isInterrupted()) {
 			throw new InterruptedException();
 		}
-		flatGraph = NFAAnalysisTools.makeTrim(flatGraph);
+		//flatGraph = NFAAnalysisTools.makeTrim(flatGraph);
 		if (isInterrupted()) {
 			throw new InterruptedException();
 		}
@@ -93,7 +92,7 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 		if (isInterrupted()) {
 			throw new InterruptedException();
 		}
-		flatGraph = NFAAnalysisTools.makeTrim(flatGraph);
+		//flatGraph = NFAAnalysisTools.makeTrim(flatGraph);
 
 		if (isInterrupted()) {
 			throw new InterruptedException();
@@ -117,7 +116,7 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 			throw new InterruptedException();
 		}
 		
-		flatGraph = NFAAnalysisTools.makeTrim(flatGraph);
+		//flatGraph = NFAAnalysisTools.makeTrim(flatGraph);
 
 		if (isInterrupted()) {
 			throw new InterruptedException();

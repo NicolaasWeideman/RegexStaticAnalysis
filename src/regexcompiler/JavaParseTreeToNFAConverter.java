@@ -73,7 +73,9 @@ public class JavaParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		m.addVertex(q0);
 		m.addVertex(q1);
 		
-		m.addEdge(new NFAEdge(q0, q1, transitionLabel));
+		if (!transitionLabel.isEmpty()) {
+			m.addEdge(new NFAEdge(q0, q1, transitionLabel));
+		}
 		m.setInitialState(q0);
 		m.addAcceptingState(q1);
 		return m;

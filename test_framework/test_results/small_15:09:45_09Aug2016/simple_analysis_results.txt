@@ -1,0 +1,36 @@
+1: abcde
+NO IDA
+2: (a|a)*
+EDA
+3: a*a*b*b*c*c*
+IDA_3
+4: (a|b)*
+NO IDA
+5: (a*)*
+EDA
+6: ([a-b]&&[^c]|[c])*
+NO IDA
+7: a*a*a*
+IDA_2
+8: .*|(a|a)*
+EDA
+9: (a|a)*|.*
+EDA
+10: (a*)*.*
+EDA
+11: .*(a|a)*
+EDA
+Construction: JAVA
+ε-loop removing strategy: FLATTENING
+Analysed:	11/11
+	Safe:		3/11
+	Vulnerable:	8/11
+		EDA:		6/11
+		IDA:		2/11
+	Vulnerable EDA:	[2, 5, 8, 9, 10, 11]
+	Vulnerable IDA:	[3, 7]
+Skipped:	0/11
+Timeout:	0/11
+		EDA:	0/11
+		IDA:	0/11
+Total running time: 2758

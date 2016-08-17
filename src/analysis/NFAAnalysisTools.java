@@ -343,6 +343,7 @@ public class NFAAnalysisTools {
 	
 	public static NFAGraph makeTrimUPNFA(NFAGraph m, NFAGraph upnfa) {
 		HashSet<NFAVertexND> usefulStates = new HashSet<NFAVertexND>();
+		
 		for (NFAVertexND v : upnfa.vertexSet()) {
 			UPNFAState upNFAState = (UPNFAState) v;
 			
@@ -365,7 +366,7 @@ public class NFAAnalysisTools {
 		return trimmedUPNFA;
 	}
 	
-	public static boolean upNFAStateIsUseful(NFAGraph m, NFAGraph upnfa, UPNFAState upNFAState) {
+	public static boolean upNFAStateIsUseful(NFAGraph m, NFAGraph upnfa, UPNFAState upNFAState) {	
 		HashSet<TransitionLabel> alphabet = new HashSet<TransitionLabel>();
 		alphabet.add(CharacterClassTransitionLabel.wildcardLabel());
 		HashSet<NFAVertexND> P = (HashSet<NFAVertexND>) upNFAState.getP();

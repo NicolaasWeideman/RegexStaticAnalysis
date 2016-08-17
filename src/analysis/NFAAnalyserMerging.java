@@ -161,7 +161,7 @@ public class NFAAnalyserMerging extends NFAAnalyser {
 	@Override
 	protected EdaAnalysisResults getEDAAnalysisResults(NFAGraph originalM) throws InterruptedException {
 		NFAGraph merged = originalM.copy();
-		merged = NFAAnalysisTools.makeTrim(merged);
+		//merged = NFAAnalysisTools.makeTrim(merged);
 		if (isInterrupted()) {
 			throw new InterruptedException();
 		}
@@ -218,7 +218,7 @@ public class NFAAnalyserMerging extends NFAAnalyser {
 		if (isInterrupted()) {
 			throw new InterruptedException();
 		}
-		merged = NFAAnalysisTools.makeTrim(merged);
+		//merged = NFAAnalysisTools.makeTrim(merged);
 		if (isInterrupted()) {
 			throw new InterruptedException();
 		}
@@ -239,7 +239,7 @@ public class NFAAnalyserMerging extends NFAAnalyser {
 			throw new InterruptedException();
 		}
 		
-		merged = NFAAnalysisTools.makeTrim(merged);
+		//merged = NFAAnalysisTools.makeTrim(merged);
 		if (isInterrupted()) {
 			throw new InterruptedException();
 		}
@@ -262,7 +262,7 @@ public class NFAAnalyserMerging extends NFAAnalyser {
 			throw new InterruptedException();
 		}
 		
-		merged = NFAAnalysisTools.makeTrim(merged);		
+		//merged = NFAAnalysisTools.makeTrim(merged);		
 		if (isInterrupted()) {
 			throw new InterruptedException();
 		}

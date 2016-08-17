@@ -234,7 +234,7 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 			throw new InterruptedException();
 		}
 		
-		pc = NFAAnalysisTools.makeTrim(pc);
+		//pc = NFAAnalysisTools.makeTrim(pc);
 		if (isInterrupted()) {
 			throw new InterruptedException();
 		}
@@ -290,7 +290,7 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 		} catch (InterruptedException e1) {
 			throw new InterruptedException();
 		}
-		pc = NFAAnalysisTools.makeTrim(pc);
+		//pc = NFAAnalysisTools.makeTrim(pc);
 		
 		
 		String[] filterStates = {"0", "1", "2"};
@@ -536,7 +536,7 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 		}
 		
 		if (resultsObject.edaCase == EdaCases.NO_EDA) {
-			/* Testing for multiple paths in PC */
+			/* Testing for multiple paths in PC */	
 			resultsObject = edaTestCaseFilter(converted, converted);
 		}
 
