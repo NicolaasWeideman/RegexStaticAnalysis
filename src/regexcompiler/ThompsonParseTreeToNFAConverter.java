@@ -94,10 +94,10 @@ public class ThompsonParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 
 		/* Adding the vertices of m2 */
 		assert m2.getAcceptingStates().size() == 1 : "Construction assumes only one accept state";
-		String newName = "q";
 		int i = 0;
 		for (NFAVertexND v : m2.vertexSet()) {
 			NFAVertexND newVertex = v;
+			String newName = "" + v.getStateNumberByDimension(1).charAt(0);
 			while (resultNFA.containsVertex(newVertex)) {
 				newVertex = new NFAVertexND(newName + i);
 				i++;
@@ -124,7 +124,7 @@ public class ThompsonParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		/* Add the new initial vertex */
 		NFAVertexND newInitialVertex = new NFAVertexND("q0");
 		while (resultNFA.containsVertex(newInitialVertex)) {
-			newInitialVertex = new NFAVertexND(newName + i);
+			newInitialVertex = new NFAVertexND("q" + i);
 			i++;
 		}
 		resultNFA.addVertex(newInitialVertex);
@@ -139,7 +139,7 @@ public class ThompsonParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		/* Add the new accept vertex */
 		NFAVertexND newAcceptVertex = new NFAVertexND("q" + resultNFA.vertexSet().size());
 		while (resultNFA.containsVertex(newAcceptVertex)) {
-			newInitialVertex = new NFAVertexND(newName + i);
+			newInitialVertex = new NFAVertexND("q" + i);
 			i++;
 		}
 		resultNFA.addVertex(newAcceptVertex);
@@ -164,20 +164,18 @@ public class ThompsonParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		
 		/* Adding the vertices of m2 */
 		NFAVertexND m2InitialState = null;
-		String newName = "q";
 		int i = 0;
 		for (NFAVertexND v : m2.vertexSet()) {
-			/* Do not add m2's initial state */
 			
 			NFAVertexND newVertex = v;
+			String newName = "" + v.getStateNumberByDimension(1).charAt(0);
 			while (resultNFA.containsVertex(newVertex) || newVertex.equals(m2InitialState)) {
 				newVertex = new NFAVertexND(newName + i);
 				i++;
 			}
 			
-			if (!m2.getInitialState().equals(v)) {
-				resultNFA.addVertex(newVertex);				
-			} else {
+			resultNFA.addVertex(newVertex);				
+			if (m2.getInitialState().equals(v)) {
 				m2InitialState = newVertex;
 			}
 			stateMap.put(v, newVertex);
@@ -193,23 +191,15 @@ public class ThompsonParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		for (NFAEdge e : m2.edgeSet()) {
 			NFAVertexND source = stateMap.get(e.getSourceVertex());
 			NFAVertexND target = stateMap.get(e.getTargetVertex());	
-			if (!m2InitialState.equals(source) && !m2InitialState.equals(target)) {
-				NFAEdge newEdge = new NFAEdge(source, target, e.getTransitionLabel());
-				resultNFA.addEdge(newEdge);
-			} else if (m2InitialState.equals(source)) {
-				/* All the outgoing edges of the original initial state of m2 now come from the accepting states */
-				for (NFAVertexND m1AcceptingState : m1.getAcceptingStates()) {
-					NFAEdge newEdge = new NFAEdge(m1AcceptingState, target, e.getTransitionLabel());
-					resultNFA.addEdge(newEdge);
-				}
-			} else {
-				/* All the outgoing edges of the original initial state of m2 now come from the accepting states */
-				for (NFAVertexND m1AcceptingState : m1.getAcceptingStates()) {
-					NFAEdge newEdge = new NFAEdge(source, m1AcceptingState, e.getTransitionLabel());
-					resultNFA.addEdge(newEdge);
-				}
-			}
+			NFAEdge newEdge = new NFAEdge(source, target, e.getTransitionLabel());
+			resultNFA.addEdge(newEdge);
 
+		}
+
+		/* Adding the connecting edges */
+		for (NFAVertexND m1AcceptingState : m1.getAcceptingStates()) {
+			NFAEdge newEdge = new NFAEdge(m1AcceptingState, m2InitialState, new EpsilonTransitionLabel("ε1"));
+			resultNFA.addEdge(newEdge);
 		}
 		
 
@@ -263,11 +253,10 @@ public class ThompsonParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		NFAVertexND oldAcceptState = m.getAcceptingStates().iterator().next();
 		
 		/* Add the new initial vertex */
-		String newName = "q";
 		int i = 0;
 		NFAVertexND newInitialState = new NFAVertexND("q0");
 		while (resultNFA.containsVertex(newInitialState)) {
-			newInitialState = new NFAVertexND(newName + i);
+			newInitialState = new NFAVertexND("q" + i);
 			i++;
 		}
 		resultNFA.addVertex(newInitialState);
@@ -275,11 +264,10 @@ public class ThompsonParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		
 		
 		/* Add the new accepting vertex */
-		newName = "q";
 		i = 0;
 		NFAVertexND newAcceptState = new NFAVertexND("q" + resultNFA.vertexSet().size());
 		while (resultNFA.containsVertex(newAcceptState)) {
-			newAcceptState = new NFAVertexND(newName + i);
+			newAcceptState = new NFAVertexND("q" + i);
 			i++;
 		}
 		resultNFA.addVertex(newAcceptState);
@@ -336,11 +324,10 @@ public class ThompsonParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		NFAVertexND oldAcceptState = m.getAcceptingStates().iterator().next();
 		
 		/* Add the new initial vertex */
-		String newName = "q";
 		int i = 0;
 		NFAVertexND newInitialState = new NFAVertexND("q0");
 		while (resultNFA.containsVertex(newInitialState)) {
-			newInitialState = new NFAVertexND(newName + i);
+			newInitialState = new NFAVertexND("q" + i);
 			i++;
 		}
 		resultNFA.addVertex(newInitialState);
@@ -348,11 +335,10 @@ public class ThompsonParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		
 		
 		/* Add the new accepting vertex */
-		newName = "q";
 		i = 0;
 		NFAVertexND newAcceptState = new NFAVertexND("q" + resultNFA.vertexSet().size());
 		while (resultNFA.containsVertex(newAcceptState)) {
-			newAcceptState = new NFAVertexND(newName + i);
+			newAcceptState = new NFAVertexND("q" + i);
 			i++;
 		}
 		resultNFA.addVertex(newAcceptState);
@@ -510,11 +496,10 @@ public class ThompsonParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		NFAVertexND oldAcceptState = m.getAcceptingStates().iterator().next();
 		
 		/* Add the new initial vertex */
-		String newName = "q";
 		int i = 0;
 		NFAVertexND newInitialState = new NFAVertexND("q0");
 		while (resultNFA.containsVertex(newInitialState)) {
-			newInitialState = new NFAVertexND(newName + i);
+			newInitialState = new NFAVertexND("q" + i);
 			i++;
 		}
 		resultNFA.addVertex(newInitialState);
@@ -522,11 +507,10 @@ public class ThompsonParseTreeToNFAConverter extends ParseTreeToNFAConverter {
 		
 		
 		/* Add the new accepting vertex */
-		newName = "q";
 		i = 0;
 		NFAVertexND newAcceptState = new NFAVertexND("q" + resultNFA.vertexSet().size());
 		while (resultNFA.containsVertex(newAcceptState)) {
-			newAcceptState = new NFAVertexND(newName + i);
+			newAcceptState = new NFAVertexND("q" + i);
 			i++;
 		}
 		resultNFA.addVertex(newAcceptState);

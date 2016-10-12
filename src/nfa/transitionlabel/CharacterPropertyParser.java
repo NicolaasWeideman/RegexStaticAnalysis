@@ -19,8 +19,12 @@ import util.RangeSet;
 import util.RangeSet.Range;
 
 public class CharacterPropertyParser {
+
+	private final String FILE_PATH = "./data/";
 	
 	private final String FILE_NAME = "predef_ranges.txt";
+
+	private final String FILE = FILE_PATH + FILE_NAME;
 	
 	public static final int MIN_16UNICODE = 0;
 	public static final int MAX_16UNICODE = 65536;
@@ -49,7 +53,7 @@ public class CharacterPropertyParser {
 	
 	private void readData() {
 		try {
-			BufferedReader fileReader = new BufferedReader(new FileReader(new File(FILE_NAME)));
+			BufferedReader fileReader = new BufferedReader(new FileReader(new File(FILE)));
 			try {
 				while (fileReader.ready()) {
 					String line = fileReader.readLine();
@@ -123,7 +127,7 @@ public class CharacterPropertyParser {
 				}
 			}
 		} catch (FileNotFoundException e) {
-			System.err.println("The file " + FILE_NAME + " was not found in " + System.getProperty("user.dir"));
+			System.err.println("The file " + FILE + " was not found in " + System.getProperty("user.dir"));
 			e.printStackTrace();
 		}
 	}
