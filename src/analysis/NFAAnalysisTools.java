@@ -804,7 +804,7 @@ public class NFAAnalysisTools {
 		return null;
 	}
 	
-	private static HashSet<NFAVertexND> reachableWithEpsilon(NFAGraph n, NFAVertexND v) {
+	public static HashSet<NFAVertexND> reachableWithEpsilon(NFAGraph n, NFAVertexND v) {
 		HashSet<NFAVertexND> visited = new HashSet<NFAVertexND>();
 		LinkedList<NFAVertexND> toVisit = new LinkedList<NFAVertexND>();
 		toVisit.add(v);
