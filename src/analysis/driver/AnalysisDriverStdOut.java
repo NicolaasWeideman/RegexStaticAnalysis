@@ -154,8 +154,8 @@ public class AnalysisDriverStdOut {
 					case EDA:
 						analysisGraph = ar.getAnalysisGraph();
 						boolean constructedEdaExploitString = ar.constructedExploitString();
-						ExploitString edaExploitString;
-						String edaExploitStringStr;
+						ExploitString edaExploitString = null;
+						String edaExploitStringStr = null;
 
 						if (constructedEdaExploitString) {
 							edaExploitString = ar.getExploitString();
@@ -163,23 +163,27 @@ public class AnalysisDriverStdOut {
 						} else {
 							edaExploitStringStr = "**TIMEOUT**";
 						}
-						ExploitString edaResult = analyser.findEDAExploitString(analysisGraph);
+				
 						if (isVerbose) {
 							/* We only construct the exploit string if the user asks for it */
 							System.out.println("NFA constructed in: " + ar.getNfaConstructionTime() + "ms");
 							System.out.println("EDA analysis performed in: " + ar.getEdaAnalysisTime() + "ms");
-							System.out.println("Contains EDA with: " + edaResult);
+							System.out.println("Contains EDA with: " + edaExploitString);
 							if (constructedEdaExploitString) {
-								System.out.println("\tPrefix:\t\"" + edaResult.getPrefixVisual() + "\"");
-								System.out.println("\tPump:\t\"" + edaResult.getPumpByDegreeVisual(0) + "\"");
-								System.out.println("\tSuffix:\t\"" + edaResult.getSuffixVisual() + "\"");
+								System.out.println("\tPrefix:\t\"" + edaExploitString.getPrefixVisual() + "\"");
+								System.out.println("\tPump:\t\"" + edaExploitString.getPumpByDegreeVisual(0) + "\"");
+								System.out.println("\tSuffix:\t\"" + edaExploitString.getSuffixVisual() + "\"");
 							}
 							System.out.println("Total analysis time: " + ar.getTotalAnalysisTime());
 						} else {
 							System.out.print("EDA ");
 						}
 						if (shouldTestExploitString) {
-							testWithMatcher(edaResult, pattern);
+							if (constructedEdaExploitString) {
+								testWithMatcher(edaExploitString, pattern);
+							} else {
+								System.out.println("NO_EXPLOIT_STRING_CONSTRUCTED");
+							}
 						} else {
 							System.out.println();
 						}
