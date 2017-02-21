@@ -27,14 +27,11 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 
 	@Override
 	protected EdaAnalysisResults getEDAAnalysisResults(NFAGraph originalM) throws InterruptedException {
-
 		NFAGraph flatGraph = flattenNFA(originalM);
-
 		
 		if (isInterrupted()) {
 			throw new InterruptedException();
 		}
-		
 		//flatGraph = NFAAnalysisTools.makeTrim(flatGraph);
 
 		if (isInterrupted()) {
@@ -45,7 +42,7 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 
 		if (isInterrupted()) {
 			throw new InterruptedException();
-		}
+		}	
 
 		EdaAnalysisResults toReturn = new EdaAnalysisResultsNoEda(originalM);
 		/* We set the priorityremoval strategy here, so that the caller know that priorities were ignored */
@@ -130,28 +127,43 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 		return toReturn;
 	}
 
-	public static NFAGraph flattenNFA2(NFAGraph m) {
+	public static NFAGraph flattenNFA2(NFAGraph m) throws InterruptedException {
 		NFAGraph flatGraph = new NFAGraph();
 		/* Adding the vertices */
 		for (NFAVertexND v : m.vertexSet()) {
+			if (Thread.currentThread().isInterrupted()) {
+				throw new InterruptedException();
+			}
 			flatGraph.addVertex(v);
 		}
 
 		flatGraph.setInitialState(m.getInitialState());
 		for (NFAVertexND v : m.getAcceptingStates()) {
+			if (Thread.currentThread().isInterrupted()) {
+				throw new InterruptedException();
+			}
 			flatGraph.addAcceptingState(v);
 		}
 
 		/* Adding the non-epsilon edges */
 		for (NFAEdge e : m.edgeSet()) {
+			if (Thread.currentThread().isInterrupted()) {
+				throw new InterruptedException();
+			}
 			if (!e.getIsEpsilonTransition()) {
 				flatGraph.addEdge(e);
 			}
 		}
 
 		for (NFAVertexND source : m.vertexSet()) {
+			if (Thread.currentThread().isInterrupted()) {
+				throw new InterruptedException();
+			}
 			HashMap<NFAVertexND, Integer> numWalksMap = numWalksFrom(m, source);
 			for (Map.Entry<NFAVertexND, Integer> kv : numWalksMap.entrySet()) {
+				if (Thread.currentThread().isInterrupted()) {
+					throw new InterruptedException();
+				}
 				NFAVertexND destination = kv.getKey();
 				int weight = kv.getValue();
 				if (weight > 0) {
@@ -169,7 +181,7 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 		return flatGraph;
 	}
 
-	public static NFAGraph flattenNFA(NFAGraph m) {
+	public static NFAGraph flattenNFA(NFAGraph m) throws InterruptedException {
 		NFAGraph flatGraph = new NFAGraph();
 
 		NFAVertexND mInitialState = m.getInitialState();
@@ -179,6 +191,9 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 
 		/* Adding the non-epsilon edges and their vertices */
 		for (NFAEdge e : m.edgeSet()) {
+			if (Thread.currentThread().isInterrupted()) {
+				throw new InterruptedException();
+			}
 			if (!e.getIsEpsilonTransition()) {
 				NFAVertexND sourceVertex = e.getSourceVertex();
 				NFAVertexND targetVertex = e.getTargetVertex();
@@ -197,6 +212,7 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 
 			}
 		}
+		
 
 		/* Adding the initial state */
 		if (!flatGraph.containsVertex(mInitialState)) {
@@ -206,6 +222,9 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 
 		/* Adding the accepting states */
 		for (NFAVertexND v : m.getAcceptingStates()) {
+			if (Thread.currentThread().isInterrupted()) {
+				throw new InterruptedException();
+			}
 			if (!flatGraph.containsVertex(v)) {
 				flatGraph.addVertex(v);
 			}
@@ -213,9 +232,15 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 		}
 
 		for (NFAVertexND sourceState : searchFromVertices) {
+			if (Thread.currentThread().isInterrupted()) {
+				throw new InterruptedException();
+			}
 			LinkedList<NFAVertexND> reachableFromSource = dfsFlatten(m,	sourceState);
 			int priorityCounter = 1;
 			for (NFAVertexND targetState : reachableFromSource) {
+				if (Thread.currentThread().isInterrupted()) {
+					throw new InterruptedException();
+				}
 				if (!sourceState.equals(targetState)) {
 					NFAEdge newEdge = new NFAEdge(sourceState, targetState,	new EpsilonTransitionLabel("ε" + priorityCounter));
 					flatGraph.addEdge(newEdge);
@@ -227,7 +252,7 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 		return flatGraph;
 	}
 
-	public static LinkedList<NFAVertexND> dfsFlatten(NFAGraph m, NFAVertexND startVertex) {
+	public static LinkedList<NFAVertexND> dfsFlatten(NFAGraph m, NFAVertexND startVertex) throws InterruptedException {
 		LinkedList<NFAVertexND> endVertices = new LinkedList<NFAVertexND>();
 		dfsFlatten(m, startVertex, new HashSet<NFAEdge>(), endVertices);
 		return endVertices;
@@ -237,7 +262,10 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 	 * Assumes one start and accept state and either epsilon transitions, or a
 	 * symbol transitions from each state
 	 */
-	private static void dfsFlatten(NFAGraph m, NFAVertexND currentVertex, HashSet<NFAEdge> visitedEdges, LinkedList<NFAVertexND> endVertices) {
+	private static void dfsFlatten(NFAGraph m, NFAVertexND currentVertex, HashSet<NFAEdge> visitedEdges, LinkedList<NFAVertexND> endVertices) throws InterruptedException {
+		if (Thread.currentThread().isInterrupted()) {
+			throw new InterruptedException();
+		}
 
 		Set<NFAEdge> outgoingEdges = m.outgoingEdgesOf(currentVertex);
 		if (!outgoingEdges.isEmpty()) {

@@ -171,7 +171,7 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 		return resultsObject;
 	}
 	
-	public ExploitString findEDAExploitString(NFAGraph originalM) {
+	public ExploitString findEDAExploitString(NFAGraph originalM) throws InterruptedException {
 		if (edaResultsCache.containsKey(originalM)) {
 			EdaAnalysisResults resultsObject = edaResultsCache.get(originalM);
 			return exploitStringBuilder.buildEdaExploitString(resultsObject);
@@ -181,7 +181,7 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 		
 	}
 	
-	public ExploitString findIDAExploitString(NFAGraph originalM) {
+	public ExploitString findIDAExploitString(NFAGraph originalM) throws InterruptedException {
 		if (idaResultsCache.containsKey(originalM)) {
 			IdaAnalysisResults resultsObject = idaResultsCache.get(originalM);
 			return exploitStringBuilder.buildIdaExploitString(resultsObject);
@@ -196,6 +196,9 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 				throw new InterruptedException();
 			}
 			for (NFAEdge e : currentSccInFlat.edgeSet()) {
+				if (isInterrupted()) {
+					throw new InterruptedException();
+				}
 				if (e.getNumParallel() > 1) {
 
 					/* building the exploit string */
@@ -206,10 +209,15 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 				}
 			}
 			for (NFAVertexND sourceVertex : currentSccInFlat.vertexSet()) {
-				
+				if (isInterrupted()) {
+					throw new InterruptedException();
+				}
 				HashSet<NFAVertexND> epsilonAdjacentVertices = new HashSet<NFAVertexND>();
 				HashSet<NFAEdge> outgoingEpsilonEdges = (HashSet<NFAEdge>) currentSccInFlat.outgoingEpsilonEdgesOf(sourceVertex);
 				for (NFAEdge e : outgoingEpsilonEdges) {
+					if (isInterrupted()) {
+						throw new InterruptedException();
+					}
 					NFAVertexND targetVertex = e.getTargetVertex();
 					if (epsilonAdjacentVertices.contains(targetVertex)) {
 						
@@ -345,6 +353,9 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 			}
 			boolean containsSymbolTransition = false;
 			for (NFAEdge e : scc.edgeSet()) {
+				if (isInterrupted()) {
+					throw new InterruptedException();
+				}
 				TransitionLabel tl = e.getTransitionLabel();				
 				if (tl.getTransitionType() == TransitionType.SYMBOL) {
 					containsSymbolTransition = true;
@@ -381,7 +392,6 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 				}
 			}
 		}
-
 		if (containsIda) {
 			
 			/*
@@ -887,85 +897,5 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 			this.transitionLabels = transitionLabels;
 		}
 		
-	}
-
-	public static void main(String [] args) throws InterruptedException {
-	
-		NFAConstruction construction = NFAConstruction.JAVA;
-		boolean doFlattening = true;
-		//NFAGraph nfa = MyPattern.toNFAGraph("(b|ba{1})*");
-		//NFAGraph nfa = MyPattern.toNFAGraph("([p|P][\\s]*[o|O][\\s]*[b|B][\\s]*[o|O][\\s]*[x|X][\\s]*[a-zA-Z0-9]*|\b[P|p]+(OST|ost|o|O)?\\.?\\s*[O|o|0]+(ffice|FFICE)?\\.?\\s*[B|b][O|o|0]?[X|x]+\\.?\\s+[#]?(\\d+)*(\\D+)*\b");
-		//NFAGraph nfa = MyPattern.toNFAGraph("((.*)??)*(a|a)*", construction);
-		NFAGraph nfa = MyPattern.toNFAGraph("((.*)??)*(a|a)*", construction);
-		System.out.println("Compilation complete.");
-		NFAAnalyser nfaa;
-		if (doFlattening) {
-			nfaa = new NFAAnalyserFlattening(PriorityRemovalStrategy.UNPRIORITISE);
-		} else {
-			nfaa = new NFAAnalyserMerging(PriorityRemovalStrategy.UNPRIORITISE);
-		}
-		System.out.println("Original: " + nfa);
-		NFAGraph flatNfa = NFAAnalyserFlattening.flattenNFA(nfa);
-		System.out.println("Flat: " + flatNfa);
-		NFAGraph unprioritisedNFAGraph = nfaa.createUnprioritisedNFAGraph(flatNfa);
-		System.out.println(unprioritisedNFAGraph);
-		
-		
-		
-		NFAGraph trimmedUPNFA = NFAAnalysisTools.makeTrimUPNFA(nfa, unprioritisedNFAGraph);
-		System.out.println("Trimmed: " + trimmedUPNFA);
-		HashMap<NFAVertexND, UPNFAState> statesMap = new HashMap<NFAVertexND, UPNFAState>();
-		NFAGraph converted = NFAAnalysisTools.convertUpNFAToNFAGraph(trimmedUPNFA, statesMap);
-		System.out.println(converted);
-		
-		LinkedList<NFAGraph> sccsInFlat = NFAAnalysisTools.getStronglyConnectedComponents(converted);
-
-		EdaAnalysisResults results = new EdaAnalysisResultsNoEda(converted);
-
-		/* Testing for parallel edges in scc in merged graph */
-		results = nfaa.edaTestCaseParallel(converted, sccsInFlat);
-
-		if (results.edaCase != EdaCases.NO_EDA) {
-			System.out.println("EDA: Prallel!");
-		} else {
-			/* Testing for multiple paths in PC */
-			results = nfaa.edaTestCaseFilter(converted, converted);
-		}
-			
-		System.out.println(results);
-		if (results.edaCase == EdaCases.PARALLEL) {
-			System.out.println("Vulnerable");
-			ExploitStringBuilder esb = new ExploitStringBuilder();
-			ExploitString es = esb.buildEdaExploitString(results);
-			System.out.println(es.getPrefixVisual());
-			System.out.println(es.getPumpByDegreeVisual(0));
-			System.out.println(es.getSuffixVisual());
-		} else if (results.edaCase == EdaCases.FILTER) {
-			//System.out.println(((EdaAnalysisResultsFilter) results).getStartState());
-			System.out.println("Vulnerable");
-			ExploitStringBuilder esb = new ExploitStringBuilder();
-			ExploitString es = esb.buildEdaExploitString(results);
-			System.out.println(es.getPrefix());
-			System.out.println(es.getPumpByDegree(0));
-			System.out.println(es.getSuffix());
-		} else {
-			System.out.println("Not vulnerable");
-		}
-		/*try {
-			IdaAnalysisResults results = (IdaAnalysisResults) nfaa.getIDAAnalysisResults(nfa);
-			if (results.idaCase == IdaCases.IDA) {
-				IdaAnalysisResultsIda idaResults = (IdaAnalysisResultsIda) results;
-				System.out.println("Contains IDA with degree: " + idaResults.getDegree());
-				ExploitStringBuilder esbf = new ExploitStringBuilder();
-				ExploitString es = esbf.buildIdaExploitString(idaResults);
-				System.out.println("Exploit string: " + es);
-			} else {
-				System.out.println("Does not contain IDA.");
-			}
-		} catch (InterruptedException ie) {
-			System.out.println("TIMEOUT");
-		}*/
-
-
 	}
 }

@@ -11,3 +11,5 @@
 /.*(a|a)*/
 /(\d|\d)*/
 /(\b|\b)*/
+/(a*|a*){255}/
+/^Authorization\x3a(\s*|\s*\r?\n\s+)Basic\s[^\n]{512}/

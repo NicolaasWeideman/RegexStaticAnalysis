@@ -153,15 +153,27 @@ public class AnalysisDriverStdOut {
 					switch (results) {
 					case EDA:
 						analysisGraph = ar.getAnalysisGraph();
+						boolean constructedEdaExploitString = ar.constructedExploitString();
+						ExploitString edaExploitString;
+						String edaExploitStringStr;
+
+						if (constructedEdaExploitString) {
+							edaExploitString = ar.getExploitString();
+							edaExploitStringStr = edaExploitString.toString();
+						} else {
+							edaExploitStringStr = "**TIMEOUT**";
+						}
 						ExploitString edaResult = analyser.findEDAExploitString(analysisGraph);
 						if (isVerbose) {
 							/* We only construct the exploit string if the user asks for it */
 							System.out.println("NFA constructed in: " + ar.getNfaConstructionTime() + "ms");
 							System.out.println("EDA analysis performed in: " + ar.getEdaAnalysisTime() + "ms");
 							System.out.println("Contains EDA with: " + edaResult);
-							System.out.println("\tPrefix:\t\"" + edaResult.getPrefixVisual() + "\"");
-							System.out.println("\tPump:\t\"" + edaResult.getPumpByDegreeVisual(0) + "\"");
-							System.out.println("\tSuffix:\t\"" + edaResult.getSuffixVisual() + "\"");
+							if (constructedEdaExploitString) {
+								System.out.println("\tPrefix:\t\"" + edaResult.getPrefixVisual() + "\"");
+								System.out.println("\tPump:\t\"" + edaResult.getPumpByDegreeVisual(0) + "\"");
+								System.out.println("\tSuffix:\t\"" + edaResult.getSuffixVisual() + "\"");
+							}
 							System.out.println("Total analysis time: " + ar.getTotalAnalysisTime());
 						} else {
 							System.out.print("EDA ");
@@ -191,26 +203,48 @@ public class AnalysisDriverStdOut {
 					case IDA:
 						/* We need to construct the exploit string to calculate the degree */
 						analysisGraph = ar.getAnalysisGraph();
-						ExploitString idaResult = analyser.findIDAExploitString(analysisGraph);
-						int degree = idaResult.getDegree();
+						//System.out.println("IDA:1");
+						//ExploitString idaResult = analyser.findIDAExploitString(analysisGraph);
+						boolean constructedIdaExploitString = ar.constructedExploitString();
+						ExploitString idaExploitString = null;
+						String idaExploitStringStr = null;
+						int degree = 0;
+						String idaExploitStringDegreeStr;
+						if (constructedIdaExploitString) {
+							idaExploitString = ar.getExploitString();
+							idaExploitStringStr = idaExploitString.toString();
+							degree = idaExploitString.getDegree();
+							idaExploitStringDegreeStr = "" + degree;
+						} else {
+							idaExploitStringDegreeStr = "**TIMEOUT**";
+							idaExploitStringStr = "**TIMEOUT**";
+						}
+
+						//System.out.println("IDA:2");
 						if (isVerbose) {
 							System.out.println("NFA constructed in: " + ar.getNfaConstructionTime() + "ms");
 							System.out.println("EDA analysis performed in: " + ar.getEdaAnalysisTime() + "ms");
 							System.out.println("Does not contain EDA");
 							System.out.println("IDA analysis performed in: " + ar.getIdaAnalysisTime() + "ms");
-							System.out.println("Contains IDA, degree " + degree + ", with: " + idaResult);
-							for (int i = 0; i < degree; i++) {
-								if (i == 0) {
-									System.out.println("\tPrefix:\t\t\"" + idaResult.getSeparatorByDegreeVisual(i) + "\"");
-								} else {
-									System.out.println("\tSeparator " + i + ":\t\"" + idaResult.getSeparatorByDegreeVisual(i) + "\"");
-								}								
-								System.out.println("\tPump " + i + ":\t\t\"" + idaResult.getPumpByDegreeVisual(i) + "\"");
+							System.out.println("Contains IDA, degree " + idaExploitStringDegreeStr + ", with: " + idaExploitStringStr);
+							if (constructedIdaExploitString) {
+								for (int i = 0; i < degree; i++) {
+									if (i == 0) {
+										System.out.println("\tPrefix:\t\t\"" + idaExploitString.getSeparatorByDegreeVisual(i) + "\"");
+									} else {
+										System.out.println("\tSeparator " + i + ":\t\"" + idaExploitString.getSeparatorByDegreeVisual(i) + "\"");
+									}								
+									System.out.println("\tPump " + i + ":\t\t\"" + idaExploitString.getPumpByDegreeVisual(i) + "\"");
+								}
+								System.out.println("\tSuffix:\t\t\"" + idaExploitString.getSuffixVisual() + "\"");
 							}
-							System.out.println("\tSuffix:\t\t\"" + idaResult.getSuffixVisual() + "\"");
 							System.out.println("Total analysis time: " + ar.getTotalAnalysisTime());
 						} else {
-							System.out.println("IDA_" + degree);
+							if (constructedIdaExploitString) {
+								System.out.println("IDA_" + idaExploitStringDegreeStr);
+							} else {
+								System.out.println("IDA_?");
+							}
 							//System.out.println("IDA");
 						}
 						numVulnerable++;
@@ -479,10 +513,19 @@ public class AnalysisDriverStdOut {
 			return analysisResultsType;
 		}
 
+		private ExploitString exploitString;
+		public ExploitString getExploitString() {
+			return exploitString;
+		}
+		public boolean constructedExploitString() {
+			return exploitString != null;
+		}
+
 		@Override
 		public void run() {
 
 			boolean finishedEdaAnalysis = false;
+			boolean finishedIdaAnalysis = false;
 			try {
 				long totalAnalysisStartTime = System.currentTimeMillis();
 				analysisGraph = MyPattern.toNFAGraph(pattern, nfaConstruction);	
@@ -497,12 +540,25 @@ public class AnalysisDriverStdOut {
 				totalAnalysisTime += nfaConstructionTime + edaAnalysisTime;
 				finishedEdaAnalysis = true;
 				switch (analysisResultsType) {
+				case EDA:
+					exploitString = analyser.findEDAExploitString(analysisGraph);
+					break;
 				case NO_EDA:
 					if (shouldTestIDA) {
 						long idaAnalysisStartTime = System.currentTimeMillis();
+						//System.out.println("AnalysisDriverStdOut:run:1");
 						analysisResultsType = analyser.containsIDA(analysisGraph);
+						//System.out.println("AnalysisDriverStdOut:run:2");
 						idaAnalysisTime = System.currentTimeMillis() - idaAnalysisStartTime;
 						totalAnalysisTime += idaAnalysisTime;
+						finishedIdaAnalysis = true;
+						switch (analysisResultsType) {
+						case IDA:
+							exploitString = analyser.findIDAExploitString(analysisGraph);
+							break;
+						default:
+							break;
+						}
 					}
 					break;
 				default:
@@ -512,7 +568,11 @@ public class AnalysisDriverStdOut {
 			} catch (InterruptedException ie) {
 				Thread.currentThread().interrupt();
 				if (finishedEdaAnalysis) {
-					analysisResultsType = AnalysisResultsType.TIMEOUT_IN_IDA;
+					if (finishedIdaAnalysis) {
+						analysisResultsType = AnalysisResultsType.IDA;
+					} else {
+						analysisResultsType = AnalysisResultsType.TIMEOUT_IN_IDA;
+					}
 				} else {
 					analysisResultsType = AnalysisResultsType.TIMEOUT_IN_EDA;
 				}

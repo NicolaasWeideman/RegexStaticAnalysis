@@ -341,7 +341,7 @@ public class NFAAnalysisTools {
 		return result;
 	}
 	
-	public static NFAGraph makeTrimUPNFA(NFAGraph m, NFAGraph upnfa) {
+	public static NFAGraph makeTrimUPNFA(NFAGraph m, NFAGraph upnfa) throws InterruptedException {
 		HashSet<NFAVertexND> usefulStates = new HashSet<NFAVertexND>();
 		
 		for (NFAVertexND v : upnfa.vertexSet()) {
@@ -366,7 +366,7 @@ public class NFAAnalysisTools {
 		return trimmedUPNFA;
 	}
 	
-	public static boolean upNFAStateIsUseful(NFAGraph m, NFAGraph upnfa, UPNFAState upNFAState) {	
+	public static boolean upNFAStateIsUseful(NFAGraph m, NFAGraph upnfa, UPNFAState upNFAState) throws InterruptedException {	
 		HashSet<TransitionLabel> alphabet = new HashSet<TransitionLabel>();
 		alphabet.add(CharacterClassTransitionLabel.wildcardLabel());
 		HashSet<NFAVertexND> P = (HashSet<NFAVertexND>) upNFAState.getP();
@@ -545,9 +545,15 @@ public class NFAAnalysisTools {
 
 				NFAGraph currentNFAG = new NFAGraph();
 				for (NFAVertexND v : scc.vertexSet()) {
+					if (isInterrupted()) {
+						throw new InterruptedException();
+					}
 					currentNFAG.addVertex(v);
 				}
 				for (NFAEdge e : scc.edgeSet()) {
+					if (isInterrupted()) {
+						throw new InterruptedException();
+					}
 					currentNFAG.addEdge(e);
 				}
 
@@ -625,6 +631,9 @@ public class NFAAnalysisTools {
 			boolean isInitial = false;
 			LinkedList<NFAEdge> edgesToRestore = new LinkedList<NFAEdge>();
 			for (NFAVertexND v : scc.vertexSet()) {
+				if (isInterrupted()) {
+					throw new InterruptedException();
+				}
 				if (mergedState == null) {
 					mergedState = new NFAVertexND(v.getStateNumberByDimension(1));
 				}
@@ -827,7 +836,7 @@ public class NFAAnalysisTools {
 		return visited;
 	}
 	
-	public static NFAGraph determinize(NFAGraph input, Set<NFAVertexND> reachableFromStart, Set<TransitionLabel> alphabet) {
+	public static NFAGraph determinize(NFAGraph input, Set<NFAVertexND> reachableFromStart, Set<TransitionLabel> alphabet) throws InterruptedException {
 		NFAGraph dfa = new NFAGraph();
 		
 		/* http://www.cse.unsw.edu.au/~rvg/pub/nfadfa.pdf */
@@ -840,6 +849,9 @@ public class NFAAnalysisTools {
 		StringBuilder labelBuilder = new StringBuilder();
 		Iterator<NFAVertexND> i0 = sortedReachableFromStart.iterator();
 		while (i0.hasNext()) {
+			if (isInterrupted()) {
+				throw new InterruptedException();
+			}
 			NFAVertexND startState = i0.next();
 			List<String> subStates = startState.getStates();
 			if (subStates.size() == 1) {
@@ -875,6 +887,9 @@ public class NFAAnalysisTools {
 		dfa.addVertex(dfaStartState);
 		dfa.setInitialState(dfaStartState);
 		for (NFAVertexND i : reachableFromStart) {
+			if (isInterrupted()) {
+				throw new InterruptedException();
+			}
 			if (input.isAcceptingState(i)) {
 				dfa.addAcceptingState(dfaStartState);
 			}
@@ -885,14 +900,22 @@ public class NFAAnalysisTools {
 		
 		
 		while (!toVisit.isEmpty()) {
+			if (isInterrupted()) {
+				throw new InterruptedException();
+			}
 			
 			NFAVertexND P = toVisit.removeLast();
 			/* with the label in TransitionLabel, P can get to the states in HashSet<NFAvertexND> */
 			HashMap<TransitionLabel, HashSet<NFAVertexND>> newStates = new HashMap<TransitionLabel, HashSet<NFAVertexND>>();
 			Set<NFAVertexND> subStates = dfaStateToSubStatesMap.get(P);
 			for (NFAVertexND currentSubState : subStates) {
+				if (isInterrupted()) {
+					throw new InterruptedException();
+				}
 				for (NFAEdge e : input.outgoingEdgesOf(currentSubState)) {
-				
+					if (isInterrupted()) {
+						throw new InterruptedException();
+					}
 					if (!e.getIsEpsilonTransition()) {
 						TransitionLabel label = e.getTransitionLabel();
 						NFAVertexND targetState = e.getTargetVertex();
@@ -914,6 +937,9 @@ public class NFAAnalysisTools {
 							/* Copying entries, to avoid concurrent modification errors */
 							Set<Map.Entry<TransitionLabel, HashSet<NFAVertexND>>> entries = new HashSet<Map.Entry<TransitionLabel, HashSet<NFAVertexND>>>(newStates.entrySet());
 							for (Map.Entry<TransitionLabel, HashSet<NFAVertexND>> kv : entries) {
+								if (isInterrupted()) {
+									throw new InterruptedException();
+								}
 								TransitionLabel tl1 = kv.getKey();
 							
 								TransitionLabel intersection = tl1.intersection(label);
@@ -957,9 +983,15 @@ public class NFAAnalysisTools {
 			//System.out.println(P + "\t\t" + newStates);
 			/* Finding all the ranges in the alphabet not accounted for */
 			for (TransitionLabel s : alphabet) {
+				if (isInterrupted()) {
+					throw new InterruptedException();
+				}
 				TransitionLabel toEmptyState = s;
 				/* for each range accounted for, remove it from the current alphabet range */
 				for (TransitionLabel tl : newStates.keySet()) {
+					if (isInterrupted()) {
+						throw new InterruptedException();
+					}
 					toEmptyState = toEmptyState.intersection(tl.complement());
 					if (toEmptyState.isEmpty()) {
 						break;
@@ -992,10 +1024,16 @@ public class NFAAnalysisTools {
 			}*/
 			
 			for (Map.Entry<TransitionLabel, HashSet<NFAVertexND>> kv : newStates.entrySet()) {
+				if (isInterrupted()) {
+					throw new InterruptedException();
+				}
 				TransitionLabel label = kv.getKey();
 				HashSet<NFAVertexND> reachableViaSymbolEpsilon = new HashSet<NFAVertexND>();
 				
 				for (NFAVertexND v : kv.getValue()) {
+					if (isInterrupted()) {
+						throw new InterruptedException();
+					}
 					reachableViaSymbolEpsilon.add(v);
 					HashSet<NFAVertexND> reachableViaEpsilon = reachableWithEpsilon(input, v);
 					reachableViaSymbolEpsilon.addAll(reachableViaEpsilon);
@@ -1007,6 +1045,9 @@ public class NFAAnalysisTools {
 				labelBuilder = new StringBuilder();
 				Iterator<NFAVertexND> i1 = sortedReachableViaSymbolEpsilon.iterator();
 				while (i1.hasNext()) {
+					if (isInterrupted()) {
+						throw new InterruptedException();
+					}
 					NFAVertexND currentSubState = i1.next();
 					List<String> labelSubStates = currentSubState.getStates();
 					if (labelSubStates.size() == 1) {
@@ -1018,6 +1059,9 @@ public class NFAAnalysisTools {
 						Iterator<String> i2 = labelSubStates.iterator();
 						labelBuilder.append("(");
 						while (i2.hasNext()) {
+							if (isInterrupted()) {
+								throw new InterruptedException();
+							}
 							String currentLabel = i2.next();
 							labelBuilder.append(currentLabel);
 							if (i2.hasNext()) {
