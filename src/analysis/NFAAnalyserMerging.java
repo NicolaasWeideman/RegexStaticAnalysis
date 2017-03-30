@@ -159,7 +159,7 @@ public class NFAAnalyserMerging extends NFAAnalyser {
 	}
 
 	@Override
-	protected EdaAnalysisResults getEDAAnalysisResults(NFAGraph originalM) throws InterruptedException {
+	protected EdaAnalysisResults calculateEdaAnalysisResults(NFAGraph originalM) throws InterruptedException {
 		NFAGraph merged = originalM.copy();
 		//merged = NFAAnalysisTools.makeTrim(merged);
 		if (isInterrupted()) {
@@ -212,7 +212,7 @@ public class NFAAnalyserMerging extends NFAAnalyser {
 	}
 	
 	@Override
-	protected EdaAnalysisResults getEDAUnprioritisedAnalysisResults(NFAGraph originalM) throws InterruptedException {
+	protected EdaAnalysisResults calculateEdaUnprioritisedAnalysisResults(NFAGraph originalM) throws InterruptedException {
 		NFAGraph merged = originalM.copy();
 		NFAAnalysisTools.mergeStronglyConnectedComponents(merged, true);
 		if (isInterrupted()) {
@@ -232,7 +232,7 @@ public class NFAAnalyserMerging extends NFAAnalyser {
 
 
 	@Override
-	protected IdaAnalysisResults getIDAAnalysisResults(NFAGraph originalM) throws InterruptedException {
+	protected IdaAnalysisResults calculateIdaAnalysisResults(NFAGraph originalM) throws InterruptedException {
 		NFAGraph merged = originalM.copy();
 		NFAAnalysisTools.mergeStronglyConnectedComponents(merged, true);
 		if (isInterrupted()) {
@@ -255,7 +255,7 @@ public class NFAAnalyserMerging extends NFAAnalyser {
 	}
 
 	@Override
-	protected IdaAnalysisResults getIDAUnprioritisedAnalysisResults(NFAGraph originalM) throws InterruptedException {
+	protected IdaAnalysisResults calculateIdaUnprioritisedAnalysisResults(NFAGraph originalM) throws InterruptedException {
 		NFAGraph merged = originalM.copy();
 		NFAAnalysisTools.mergeStronglyConnectedComponents(merged, true);
 		if (isInterrupted()) {

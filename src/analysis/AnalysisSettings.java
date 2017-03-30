@@ -49,9 +49,19 @@ public class AnalysisSettings {
 		return shouldTestIDA;
 	}
 
-	private final boolean shouldTestExploitString;
+	private final boolean shouldConstructEdaExploitString;
+	public boolean getShouldConstructEdaExploitString() {
+		return shouldConstructEdaExploitString;
+	}
+
+	private final boolean shouldTestEdaExploitString;
 	public boolean getShouldTestExploitString() {
-		return shouldTestExploitString;
+		return shouldTestEdaExploitString;
+	}
+
+	private final boolean shouldConstructIdaExploitString;
+	public boolean getShouldConstructIdaExploitString() {
+		return shouldConstructIdaExploitString;
 	}
 
 	private final int timeout;
@@ -59,13 +69,23 @@ public class AnalysisSettings {
 		return timeout;
 	}
 
-	public AnalysisSettings(NFAConstruction nfaConstruction, PreprocessingType preprocessingType, EpsilonLoopRemovalStrategy epsilonLoopRemovalStrategy, PriorityRemovalStrategy priorityRemovalStrategy, boolean shouldTestIDA, boolean shouldTestExploitString, int timeout) {
+	public AnalysisSettings(NFAConstruction nfaConstruction, 
+					PreprocessingType preprocessingType, 
+					EpsilonLoopRemovalStrategy epsilonLoopRemovalStrategy, 
+					PriorityRemovalStrategy priorityRemovalStrategy, 
+					boolean shouldTestIDA, 
+					boolean shouldConstructEdaExploitString,
+					boolean shouldTestEdaExploitString, 
+					boolean shouldConstructIdaExploitString,
+					int timeout) {
 		this.nfaConstruction = nfaConstruction;
 		this.preprocessingType = preprocessingType;
 		this.epsilonLoopRemovalStrategy = epsilonLoopRemovalStrategy;
 		this.priorityRemovalStrategy = priorityRemovalStrategy;
 		this.shouldTestIDA = shouldTestIDA;
-		this.shouldTestExploitString = shouldTestExploitString;
+		this.shouldConstructEdaExploitString = shouldConstructEdaExploitString;
+		this.shouldTestEdaExploitString = shouldTestEdaExploitString;
+		this.shouldConstructIdaExploitString = shouldConstructIdaExploitString;
 		this.timeout = timeout;
 	}
 	

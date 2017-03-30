@@ -38,7 +38,9 @@ public class Main {
 
 	private static final String TEST_IDA_SETTING = "--ida";
 	private static final String IS_VERBOSE_SETTING = "--verbose";
-	private static final String TEST_EXPLOIT_STRING_SETTING = "--testexploitstring";
+	private static final String CONSTRUCT_EDA_EXPLOIT_STRING_SETTING = "--construct-eda-exploit-string";
+	private static final String TEST_EDA_EXPLOIT_STRING_SETTING = "--test-eda-exploit-string";
+	private static final String CONSTRUCT_IDA_EXPLOIT_STRING_SETTING = "--construct-ida-exploit-string";
 	private static final String TIMEOUT_SETTING = "--timeout";
 
 
@@ -49,7 +51,9 @@ public class Main {
 	private static final InputType DEFAULT_INPUT_TYPE = InputType.USER_INPUT;
 	private static final boolean DEFAULT_TEST_IDA = true;
 	private static final boolean DEFAULT_IS_VERBOSE = true;
-	private static final boolean DEFAULT_TEST_EXPLOIT_STRING = true;
+	private static final boolean DEFAULT_CONSTRUCT_EDA_EXPLOIT_STRING = true;
+	private static final boolean DEFAULT_TEST_EDA_EXPLOIT_STRING = true;
+	private static final boolean DEFAULT_CONSTRUCT_IDA_EXPLOIT_STRING = true;
 	private static final int DEFAULT_TIMEOUT = 10;
 
 	private static HashSet<String> commandLineFlags;
@@ -96,12 +100,16 @@ public class Main {
 		boolean shouldTestIDA = determineWhetherShouldTestIDA();
 
 		boolean isVerbose = determineWhetherIsVerbose();
+
+		boolean shouldConstructEdaExploitString = determineWhetherShouldConstructEdaExploitString();
 		
-		boolean shouldTestExploitString = determineWhetherShouldTestExploitString();
-		if (shouldTestExploitString && nfaConstruction != NFAConstruction.JAVA) {
+		boolean shouldTestEdaExploitString = determineWhetherShouldTestEdaExploitString();
+		if (shouldTestEdaExploitString && nfaConstruction != NFAConstruction.JAVA) {
 			System.err.println("Warning: You cannot test the exploit strings for any construction other than Java. (setting test exploit string to false)");
-			shouldTestExploitString = false;
+			shouldTestEdaExploitString = false;
 		}
+
+		boolean shouldConstructIdaExploitString = determineWhetherShouldConstructIdaExploitString();
 
 
 		int timeout = determineTimeoutValue();
@@ -110,7 +118,15 @@ public class Main {
 
 		
 		InterfaceSettings interfaceSettings = new InterfaceSettings(inputType, isVerbose);
-		AnalysisSettings analysisSettings = new AnalysisSettings(nfaConstruction, preprocessingType, epsilonLoopRemovalStrategy, priorityRemovalStrategy, shouldTestIDA, shouldTestExploitString, timeout);		
+		AnalysisSettings analysisSettings = new AnalysisSettings(nfaConstruction, 
+						preprocessingType, 
+						epsilonLoopRemovalStrategy, 
+						priorityRemovalStrategy, 
+						shouldTestIDA, 
+						shouldConstructEdaExploitString,
+						shouldTestEdaExploitString, 
+						shouldConstructIdaExploitString,
+						timeout);		
 		AnalysisDriverStdOut.performAnalysis(regexesReader, interfaceSettings, analysisSettings);
 	}
 
@@ -226,18 +242,62 @@ public class Main {
 		return DEFAULT_IS_VERBOSE;
 	}
 
-	private static boolean determineWhetherShouldTestExploitString() {
+	private static boolean determineWhetherShouldConstructEdaExploitString() {
 		/* we assume that if the user enters the flag without setting it to true or false, they want it true */
-		boolean containsTestExploitStringFlag = commandLineFlags.contains(TEST_EXPLOIT_STRING_SETTING);
-		if (containsTestExploitStringFlag) {
+		boolean containsConstructEdaExploitStringFlag = commandLineFlags.contains(CONSTRUCT_EDA_EXPLOIT_STRING_SETTING);
+		if (containsConstructEdaExploitStringFlag) {
 			return true;
 		}
-		boolean containsTestExploitStringSetting = commandLineSettings.containsKey(TEST_EXPLOIT_STRING_SETTING);
-		if (containsTestExploitStringSetting) {
-			String shouldTestExploitStringValueString = commandLineSettings.get(TEST_EXPLOIT_STRING_SETTING);
-			if (shouldTestExploitStringValueString.equalsIgnoreCase("true")) {
+		boolean containsConstructEdaExploitStringSetting = commandLineSettings.containsKey(CONSTRUCT_EDA_EXPLOIT_STRING_SETTING);
+		if (containsConstructEdaExploitStringSetting) {
+			String shouldConstructEdaExploitStringValueString = commandLineSettings.get(CONSTRUCT_EDA_EXPLOIT_STRING_SETTING);
+			if (shouldConstructEdaExploitStringValueString.equalsIgnoreCase("true")) {
 				return true;
-			} else if (shouldTestExploitStringValueString.equalsIgnoreCase("false")) {
+			} else if (shouldConstructEdaExploitStringValueString.equalsIgnoreCase("false")) {
+				return false;
+			} else {
+				System.err.println("Construct exploitstring should be true or false.");
+				printUsage();
+				System.exit(0);
+			}
+		}
+		return DEFAULT_CONSTRUCT_EDA_EXPLOIT_STRING;
+	}
+
+	private static boolean determineWhetherShouldConstructIdaExploitString() {
+		/* we assume that if the user enters the flag without setting it to true or false, they want it true */
+		boolean containsConstructIdaExploitStringFlag = commandLineFlags.contains(CONSTRUCT_IDA_EXPLOIT_STRING_SETTING);
+		if (containsConstructIdaExploitStringFlag) {
+			return true;
+		}
+		boolean containsConstructIdaExploitStringSetting = commandLineSettings.containsKey(CONSTRUCT_IDA_EXPLOIT_STRING_SETTING);
+		if (containsConstructIdaExploitStringSetting) {
+			String shouldConstructIdaExploitStringValueString = commandLineSettings.get(CONSTRUCT_IDA_EXPLOIT_STRING_SETTING);
+			if (shouldConstructIdaExploitStringValueString.equalsIgnoreCase("true")) {
+				return true;
+			} else if (shouldConstructIdaExploitStringValueString.equalsIgnoreCase("false")) {
+				return false;
+			} else {
+				System.err.println("Construct exploitstring should be true or false.");
+				printUsage();
+				System.exit(0);
+			}
+		}
+		return DEFAULT_CONSTRUCT_IDA_EXPLOIT_STRING;
+	}
+
+	private static boolean determineWhetherShouldTestEdaExploitString() {
+		/* we assume that if the user enters the flag without setting it to true or false, they want it true */
+		boolean containsTestEdaExploitStringFlag = commandLineFlags.contains(TEST_EDA_EXPLOIT_STRING_SETTING);
+		if (containsTestEdaExploitStringFlag) {
+			return true;
+		}
+		boolean containsTestEdaExploitStringSetting = commandLineSettings.containsKey(TEST_EDA_EXPLOIT_STRING_SETTING);
+		if (containsTestEdaExploitStringSetting) {
+			String shouldTestEdaExploitStringValueString = commandLineSettings.get(TEST_EDA_EXPLOIT_STRING_SETTING);
+			if (shouldTestEdaExploitStringValueString.equalsIgnoreCase("true")) {
+				return true;
+			} else if (shouldTestEdaExploitStringValueString.equalsIgnoreCase("false")) {
 				return false;
 			} else {
 				System.err.println("Test exploitstring should be true or false.");
@@ -245,7 +305,7 @@ public class Main {
 				System.exit(0);
 			}
 		}
-		return DEFAULT_TEST_EXPLOIT_STRING;
+		return DEFAULT_TEST_EDA_EXPLOIT_STRING;
 	}
 
 	private static int determineTimeoutValue() {

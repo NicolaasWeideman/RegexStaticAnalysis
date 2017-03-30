@@ -4,6 +4,7 @@
 .mtj.tmp/
 
 test_framework/test_results/*
+test_framework/stored_test_results/*
 
 # Package Files #
 *.jar

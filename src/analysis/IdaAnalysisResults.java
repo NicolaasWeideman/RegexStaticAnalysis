@@ -4,7 +4,7 @@ import analysis.AnalysisSettings.PriorityRemovalStrategy;
 
 import nfa.NFAGraph;
 
-abstract class IdaAnalysisResults extends AnalysisResults {
+public abstract class IdaAnalysisResults extends AnalysisResults {
 	enum IdaCases {IDA, NO_IDA}
 	public final IdaCases idaCase;
 	

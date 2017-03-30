@@ -128,11 +128,13 @@ public interface NFAAnalyserInterface {
 		}
 	}
 	
-	public AnalysisResultsType containsEDA(NFAGraph m) throws InterruptedException;
+	public AnalysisResultsType containsEDA(NFAGraph m);
+	public EdaAnalysisResults getEdaAnalysisResults(NFAGraph m);
 	
 	public ExploitString findEDAExploitString(NFAGraph m) throws InterruptedException;
 	
-	public AnalysisResultsType containsIDA(NFAGraph m) throws InterruptedException;
+	public AnalysisResultsType containsIDA(NFAGraph m);
+	public IdaAnalysisResults getIdaAnalysisResults(NFAGraph m);
 	
 	public ExploitString findIDAExploitString(NFAGraph m) throws InterruptedException;
 

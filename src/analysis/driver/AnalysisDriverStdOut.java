@@ -12,6 +12,7 @@ import org.jgrapht.graph.UnmodifiableDirectedGraph;
 
 import analysis.*;
 import analysis.NFAAnalyserInterface.AnalysisResultsType;
+import analysis.NFAAnalyserInterface.IdaAnalysisResultsIda;
 import analysis.AnalysisSettings.PreprocessingType;
 import analysis.AnalysisSettings.PriorityRemovalStrategy;
 import analysis.AnalysisSettings.EpsilonLoopRemovalStrategy;
@@ -46,7 +47,9 @@ public class AnalysisDriverStdOut {
 	private static EpsilonLoopRemovalStrategy epsilonLoopRemovalStrategy;
 	private static PriorityRemovalStrategy priorityRemovalStrategy;
 	private static boolean shouldTestIDA;
-	private static boolean shouldTestExploitString;
+	private static boolean shouldConstructEdaExploitString;
+	private static boolean shouldTestEdaExploitString;
+	private static boolean shouldConstructIdaExploitString;
 	private static int timeout;
 	private static boolean timeoutEnabled;
 
@@ -59,7 +62,9 @@ public class AnalysisDriverStdOut {
 		epsilonLoopRemovalStrategy = analysisSettings.getEpsilonLoopRemovalStrategy();
 		priorityRemovalStrategy = analysisSettings.getPriorityRemovalStrategy();
 		shouldTestIDA = analysisSettings.getShouldTestIDA();
-		shouldTestExploitString = analysisSettings.getShouldTestExploitString();
+		shouldConstructEdaExploitString = analysisSettings.getShouldConstructEdaExploitString();
+		shouldTestEdaExploitString = analysisSettings.getShouldTestExploitString();
+		shouldConstructIdaExploitString = analysisSettings.getShouldConstructIdaExploitString();
 		timeout = analysisSettings.getTimeout();
 		if (timeout > 0) {
 			timeoutEnabled = true;
@@ -90,7 +95,9 @@ public class AnalysisDriverStdOut {
 			System.out.println("Epsilon loop removal:\t\t" + epsilonLoopRemovalStrategy);
 			System.out.println("Priority removal:\t\t" + priorityRemovalStrategy);
 			System.out.println("Testing for IDA:\t\t" + shouldTestIDA);
-			System.out.println("Testing exploit strings:\t" + shouldTestExploitString);
+			System.out.println("Construct EDA exploit strings:\t" + shouldConstructEdaExploitString);
+			System.out.println("Testing EDA exploit strings:\t" + shouldTestEdaExploitString);
+			System.out.println("Construct IDA exploit strings:\t" + shouldConstructIdaExploitString);
 			if (timeout > 0) {
 				System.out.println("Timeout:\t\t\t" + timeout + "s");
 			} else {
@@ -160,6 +167,8 @@ public class AnalysisDriverStdOut {
 						if (constructedEdaExploitString) {
 							edaExploitString = ar.getExploitString();
 							edaExploitStringStr = edaExploitString.toString();
+						} else if (!shouldConstructEdaExploitString) {
+							edaExploitStringStr = "**Not Constructed**";
 						} else {
 							edaExploitStringStr = "**TIMEOUT**";
 						}
@@ -178,7 +187,7 @@ public class AnalysisDriverStdOut {
 						} else {
 							System.out.print("EDA ");
 						}
-						if (shouldTestExploitString) {
+						if (shouldTestEdaExploitString) {
 							if (constructedEdaExploitString) {
 								testWithMatcher(edaExploitString, pattern);
 							} else {
@@ -204,23 +213,22 @@ public class AnalysisDriverStdOut {
 						numSafe++;
 						numAnalysed++;
 						break;
-					case IDA:
-						/* We need to construct the exploit string to calculate the degree */
+					case IDA:	
+						IdaAnalysisResultsIda idaAnalysisResults = (IdaAnalysisResultsIda) ar.getAnalysisResults();
 						analysisGraph = ar.getAnalysisGraph();
 						//System.out.println("IDA:1");
 						//ExploitString idaResult = analyser.findIDAExploitString(analysisGraph);
 						boolean constructedIdaExploitString = ar.constructedExploitString();
 						ExploitString idaExploitString = null;
 						String idaExploitStringStr = null;
-						int degree = 0;
-						String idaExploitStringDegreeStr;
+						int degree = idaAnalysisResults.getDegree();
+						String idaDegreeString = "" + degree;
 						if (constructedIdaExploitString) {
 							idaExploitString = ar.getExploitString();
 							idaExploitStringStr = idaExploitString.toString();
-							degree = idaExploitString.getDegree();
-							idaExploitStringDegreeStr = "" + degree;
+						} else if (!shouldConstructIdaExploitString) {
+							idaExploitStringStr = "** Not Constructed **";
 						} else {
-							idaExploitStringDegreeStr = "**TIMEOUT**";
 							idaExploitStringStr = "**TIMEOUT**";
 						}
 
@@ -230,7 +238,7 @@ public class AnalysisDriverStdOut {
 							System.out.println("EDA analysis performed in: " + ar.getEdaAnalysisTime() + "ms");
 							System.out.println("Does not contain EDA");
 							System.out.println("IDA analysis performed in: " + ar.getIdaAnalysisTime() + "ms");
-							System.out.println("Contains IDA, degree " + idaExploitStringDegreeStr + ", with: " + idaExploitStringStr);
+							System.out.println("Contains IDA, degree " + idaDegreeString + ", with: " + idaExploitStringStr);
 							if (constructedIdaExploitString) {
 								for (int i = 0; i < degree; i++) {
 									if (i == 0) {
@@ -244,11 +252,7 @@ public class AnalysisDriverStdOut {
 							}
 							System.out.println("Total analysis time: " + ar.getTotalAnalysisTime());
 						} else {
-							if (constructedIdaExploitString) {
-								System.out.println("IDA_" + idaExploitStringDegreeStr);
-							} else {
-								System.out.println("IDA_?");
-							}
+							System.out.println("IDA_" + idaDegreeString);
 							//System.out.println("IDA");
 						}
 						numVulnerable++;
@@ -380,8 +384,9 @@ public class AnalysisDriverStdOut {
 		return finalPattern;
 	}
 
-	private static void testWithMatcher(ExploitString es, String regex) {
+	private static void testWithMatcher(ExploitString es, String regex) {	
 		int max_tries = 500;
+		final Thread parentThread = Thread.currentThread();
 		Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
 		int pumpLength = es.getPumpByDegree(0).length();
 		int i = 0;
@@ -395,20 +400,50 @@ public class AnalysisDriverStdOut {
 			}
 			exploitStringShort += es.getSuffix();
 
-			
-			Matcher matcher = pattern.matcher(exploitStringShort);
-			long shortStartTime = System.currentTimeMillis();
-			matcher.matches();
-			long shortEndtTime = System.currentTimeMillis();
-			final long shortTime = (shortEndtTime - shortStartTime);
-			
-			int longPumpIterations = shortPumpIterations + 1;
+			Thread thread1 = new Thread() {
+				public void run() {
+					try {
+						/* If the shortest exploit string takes longer than the timeout set, we assume its vulnerable. */
+						sleep(timeout * Constants.MILLISECONDS_IN_SECOND);
+						parentThread.interrupt();
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+					}
+				}
+			};
+
+			InterruptibleMatchingString matchingStringShort = new InterruptibleMatchingString(exploitStringShort);
+			Matcher matcher = pattern.matcher(matchingStringShort);
+			long shortTimeTmp = -1;
+			int longPumpIterations;
+			try {
+				if (timeoutEnabled) {
+					thread1.start();	
+				}
+				long shortStartTime = System.currentTimeMillis();
+				matcher.matches();
+				thread1.interrupt();
+				long shortEndtTime = System.currentTimeMillis();
+				shortTimeTmp = (shortEndtTime - shortStartTime);
+				longPumpIterations = shortPumpIterations + 1;
+			} catch (Exception e) {
+				if (DEBUG) {
+					e.printStackTrace();
+				}
+				if (isVerbose) {
+					System.out.println("\t\t\tVulnerable:");
+					System.out.println("\t\t\t" + ExploitString.visualiseString(exploitStringShort) + " Time: (timeout) >(" + timeout + "s)");
+				} else {
+					System.out.println("MATCHER_CONFIRMED_EXP_TIME");
+				}
+				return;
+			}
+			final long shortTime = shortTimeTmp;
 			/* keep pumping until we have a significant matching time */
 			if (shortTime < 250) {
 				shortPumpIterations++;
 				continue;
-			}
-			
+			}	
 
 			StringBuilder exploitBuilder = new StringBuilder(es.getPrefix());
 			
@@ -418,10 +453,9 @@ public class AnalysisDriverStdOut {
 			exploitBuilder.append(es.getSuffix());
 			String exploitStringLong = exploitBuilder.toString();
 			InterruptibleMatchingString matchingString = new InterruptibleMatchingString(exploitStringLong);
-
-			final Thread parentThread = Thread.currentThread();
+				
 			/* timing thread to monitor the runtime of the matcher */
-			Thread thread = new Thread() {
+			Thread thread2 = new Thread() {
 				public void run() {
 					try {
 						/* wait and see if it finishes */
@@ -436,11 +470,11 @@ public class AnalysisDriverStdOut {
 			long longStartTime = 0, longEndTime = 0;
 			try {
 				
-				thread.start();
+				thread2.start();
 				matcher = pattern.matcher(matchingString);
 				longStartTime = System.currentTimeMillis();
 				matcher.matches();
-				thread.interrupt();
+				thread2.interrupt();
 				longEndTime = System.currentTimeMillis();
 			} catch (Exception e) {
 				if (DEBUG) {
@@ -516,6 +550,11 @@ public class AnalysisDriverStdOut {
 		public AnalysisResultsType getAnalysisResultsType() {
 			return analysisResultsType;
 		}
+		
+		private AnalysisResults analysisResults;
+		private AnalysisResults getAnalysisResults() {
+			return analysisResults;
+		}
 
 		private ExploitString exploitString;
 		public ExploitString getExploitString() {
@@ -539,46 +578,57 @@ public class AnalysisDriverStdOut {
 				nfaConstructionTime = System.currentTimeMillis() - totalAnalysisStartTime;
 				long edaAnalysisStartTime = System.currentTimeMillis();
 				analysisResultsType = analyser.containsEDA(analysisGraph);
-				
-				edaAnalysisTime = System.currentTimeMillis() - edaAnalysisStartTime;
-				totalAnalysisTime += nfaConstructionTime + edaAnalysisTime;
-				finishedEdaAnalysis = true;
-				switch (analysisResultsType) {
-				case EDA:
-					exploitString = analyser.findEDAExploitString(analysisGraph);
-					break;
-				case NO_EDA:
-					if (shouldTestIDA) {
-						long idaAnalysisStartTime = System.currentTimeMillis();
-						//System.out.println("AnalysisDriverStdOut:run:1");
-						analysisResultsType = analyser.containsIDA(analysisGraph);
-						//System.out.println("AnalysisDriverStdOut:run:2");
-						idaAnalysisTime = System.currentTimeMillis() - idaAnalysisStartTime;
-						totalAnalysisTime += idaAnalysisTime;
-						finishedIdaAnalysis = true;
-						switch (analysisResultsType) {
-						case IDA:
-							exploitString = analyser.findIDAExploitString(analysisGraph);
-							break;
-						default:
-							break;
+				if (analysisResultsType != AnalysisResultsType.TIMEOUT_IN_EDA) {
+					analysisResults = analyser.getEdaAnalysisResults(analysisGraph);	
+					edaAnalysisTime = System.currentTimeMillis() - edaAnalysisStartTime;
+					totalAnalysisTime += nfaConstructionTime + edaAnalysisTime;
+					finishedEdaAnalysis = true;
+					switch (analysisResultsType) {
+					case EDA:
+						if (shouldConstructEdaExploitString) {
+							try {
+								exploitString = analyser.findEDAExploitString(analysisGraph);
+							} catch (InterruptedException ie) {
+							
+							}
 						}
+						break;
+					case NO_EDA:
+						if (shouldTestIDA) {
+							long idaAnalysisStartTime = System.currentTimeMillis();
+							//System.out.println("AnalysisDriverStdOut:run:1");
+							analysisResultsType = analyser.containsIDA(analysisGraph);
+							if (analysisResultsType != AnalysisResultsType.TIMEOUT_IN_IDA) {
+								analysisResults = analyser.getIdaAnalysisResults(analysisGraph);
+								//System.out.println("AnalysisDriverStdOut:run:2");
+								idaAnalysisTime = System.currentTimeMillis() - idaAnalysisStartTime;
+								totalAnalysisTime += idaAnalysisTime;
+								finishedIdaAnalysis = true;
+								switch (analysisResultsType) {
+								case IDA:
+									if (shouldConstructIdaExploitString) {
+										try {
+											exploitString = analyser.findIDAExploitString(analysisGraph);
+										} catch (InterruptedException ie) {
+											
+										}
+									}
+									break;
+								case NO_IDA:
+									break;
+								case ANALYSIS_FAILED:
+									break;
+								default:
+									throw new RuntimeException("Unexpected Analysis Results Type after IDA analysis: " + analysisResultsType);
+								}
+							}
+						}
+						break;
+					case ANALYSIS_FAILED:
+						break;
+					default:
+						throw new RuntimeException("Unexpected Analysis Results Type after EDA analysis: " + analysisResultsType);
 					}
-					break;
-				default:
-					break;
-				}
-				
-			} catch (InterruptedException ie) {
-				Thread.currentThread().interrupt();
-				if (finishedEdaAnalysis) {
-					if (finishedIdaAnalysis) {
-						analysisResultsType = AnalysisResultsType.IDA;
-					} else {
-						analysisResultsType = AnalysisResultsType.TIMEOUT_IN_IDA;
-					}
-				} else {
-					analysisResultsType = AnalysisResultsType.TIMEOUT_IN_EDA;
 				}
 				
 			} catch (Exception e) {
@@ -593,7 +643,7 @@ public class AnalysisDriverStdOut {
 				}
 				Thread.currentThread().interrupt();
 				analysisResultsType = AnalysisResultsType.ANALYSIS_FAILED;
-			}
+			} 
 
 			
 		}

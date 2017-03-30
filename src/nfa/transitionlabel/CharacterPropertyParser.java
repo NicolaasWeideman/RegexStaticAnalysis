@@ -14,17 +14,18 @@ import java.util.Random;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.net.*;
 
 import util.RangeSet;
 import util.RangeSet.Range;
 
 public class CharacterPropertyParser {
 
-	private final String FILE_PATH = "./data/";
+	private final String FILE_PATH = "../data/";
 	
 	private final String FILE_NAME = "predef_ranges.txt";
 
-	private final String FILE = FILE_PATH + FILE_NAME;
+	private final String FILE;
 	
 	public static final int MIN_16UNICODE = 0;
 	public static final int MAX_16UNICODE = 65536;
@@ -41,6 +42,10 @@ public class CharacterPropertyParser {
 	private final HashSet<String> caseInsensitiveSuffixes;
 	
 	public CharacterPropertyParser(String regex, int index) {
+		URL binUrl = CharacterPropertyParser.class.getClassLoader().getResource("");
+		String binAbsolutePath = binUrl.getPath();
+		this.FILE = binAbsolutePath + FILE_PATH + FILE_NAME;
+
 		this.prefixToSuffixesToRanges = new HashMap<String, HashMap<String, RangeSet>>();
 		this.caseInsensitivePrefixes = new HashSet<String>();
 		this.caseInsensitiveSuffixes = new HashSet<String>();

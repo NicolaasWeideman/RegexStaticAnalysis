@@ -26,7 +26,7 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 	}
 
 	@Override
-	protected EdaAnalysisResults getEDAAnalysisResults(NFAGraph originalM) throws InterruptedException {
+	protected EdaAnalysisResults calculateEdaAnalysisResults(NFAGraph originalM) throws InterruptedException {
 		NFAGraph flatGraph = flattenNFA(originalM);
 		
 		if (isInterrupted()) {
@@ -65,7 +65,7 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 	}
 	
 	@Override
-	protected EdaAnalysisResults getEDAUnprioritisedAnalysisResults(NFAGraph originalM) throws InterruptedException {	
+	protected EdaAnalysisResults calculateEdaUnprioritisedAnalysisResults(NFAGraph originalM) throws InterruptedException {	
 		NFAGraph flatGraph = flattenNFA(originalM);
 		if (isInterrupted()) {
 			throw new InterruptedException();
@@ -81,7 +81,7 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 	}
 
 	@Override
-	protected IdaAnalysisResults getIDAAnalysisResults(NFAGraph originalM)
+	protected IdaAnalysisResults calculateIdaAnalysisResults(NFAGraph originalM)
 			throws InterruptedException {
 
 		NFAGraph flatGraph = flattenNFA(originalM);
@@ -106,7 +106,7 @@ public class NFAAnalyserFlattening extends NFAAnalyser {
 	}
 	
 	@Override
-	protected IdaAnalysisResults getIDAUnprioritisedAnalysisResults(NFAGraph originalM) throws InterruptedException {
+	protected IdaAnalysisResults calculateIdaUnprioritisedAnalysisResults(NFAGraph originalM) throws InterruptedException {
 		NFAGraph flatGraph = flattenNFA(originalM);
 
 		if (isInterrupted()) {
