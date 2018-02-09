@@ -71,4 +71,4 @@ What follows are some examples of regexes and their analysis output to aid us in
    * [Analyzing Catastrophic Backtracking Behavior in Practical Regular Expression Matching](https://arxiv.org/abs/1405.5599)
    * [Analyzing Matching Time Behavior of Backtracking Regular Expression Matchers by Using Ambiguity of NFA](https://link.springer.com/chapter/10.1007/978-3-319-40946-7_27)
    * [Turning Evil Regexes Harmless](https://dl.acm.org/citation.cfm?id=3129440)
-   * [Static analysis of regular expressions](http://hdl.handle.net/10019.1/102879)
+   * [Static Analysis of Regular Expressions](http://hdl.handle.net/10019.1/102879)
