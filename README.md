@@ -65,3 +65,10 @@ What follows are some examples of regexes and their analysis output to aid us in
    * `./run.sh -c '((a|a)*|.*)'`
    * Result: Vulnerable to exponential backtracking.
    * Explanation: Since the regexes `((a|a)*|.*)` and `(.*|(a|a)*)` look basically equivalent, one would be tempted to think that they will exhibit exactly the same matching time behaviour. This is, however, not the case. With a regex of the form `(R|S)`, the matcher first attempts to match the input string with the subexpression left of the '|' operator and then the subexpression on the right hand side. Keeping this in mind one can see that for the regex `(.*|(a|a)*)` the matcher will almost immediately accept any input string with the subexpression `.*`, but for the regex `((a|a)*|.*)` the matcher will first attempt to match the input string with the subexpression `(a|a)*` and therefore, if the input string is of the form a<sup>n</sup>x, the matching time will be exponential in n, eventhough the matcher will accept the input string eventually when attempting to match it with the `.*` subexpression, after all possible attempts to match it with `(a|a)*` have failed.
+   
+   ## Publications
+   Some research papers on the theory behind this project: 
+   * [Analyzing Catastrophic Backtracking Behavior in Practical Regular Expression Matching](https://arxiv.org/abs/1405.5599)
+   * [Analyzing Matching Time Behavior of Backtracking Regular Expression Matchers by Using Ambiguity of NFA](https://link.springer.com/chapter/10.1007/978-3-319-40946-7_27)
+   * [Turning Evil Regexes Harmless](https://dl.acm.org/citation.cfm?id=3129440)
+   * [Static analysis of regular expressions](http://hdl.handle.net/10019.1/102879)
