@@ -2,7 +2,8 @@ COMPILER ?= javac
 SRC_PATH ?= src
 BIN_PATH ?= bin
 JGRAPHT_CLASS_PATH ?= jgrapht/jgrapht-core/src/main/java
-FLAGS ?= -Xlint -cp "$(SRC_PATH):$(JGRAPHT_CLASS_PATH)" -d $(BIN_PATH)
+EXTERNAL_JARS_PATHS ?= lib/gson-2.8.2.jar
+FLAGS ?= -Xlint -cp "$(SRC_PATH):$(JGRAPHT_CLASS_PATH):$(EXTERNAL_JARS_PATHS)" -d $(BIN_PATH)
 JAR_NAME ?= RegexStaticAnalysis.jar
 
 
@@ -27,7 +28,7 @@ bin/%.class: $(SRC_PATH)/%.java
 	$(COMPILER) $(FLAGS) $<
 
 pumper: utils/pumper/PumperJava.java
-	$(COMPILER) -Xlint -cp utils/pumper/ -d utils/pumper/ $<
+	$(COMPILER) -Xlint -cp 'utils/pumper' -d utils/pumper/ $<
 
 new: clean all
 

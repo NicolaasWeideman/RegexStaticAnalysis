@@ -6,10 +6,13 @@
 test_framework/test_results/*
 test_framework/stored_test_results/*
 
-# Package Files #
+# Package Files
 *.jar
 *.war
 *.ear
+
+# Don't exclude dependencies packaged with this project (excluded above by '*.jar')
+!lib/*.jar
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
