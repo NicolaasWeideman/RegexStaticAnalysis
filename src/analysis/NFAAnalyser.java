@@ -530,6 +530,9 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 	/* Assume NFA has no epsilon loops, only one start and one accept and every state has either epsilon transitions, or one symbol transition from it */
 	protected EdaAnalysisResults edaUnprioritisedAnalysis(NFAGraph m) throws InterruptedException {
 		NFAGraph unprioritisedNFAGraph = createUnprioritisedNFAGraph(m);
+		//System.out.println("UnprioritisedNFAGraph:");
+		//System.out.println(unprioritisedNFAGraph);
+		//System.out.println("End UnpioritisedNFAGraph");
 		if (isInterrupted()) {
 			throw new InterruptedException();
 		}
@@ -578,7 +581,7 @@ public abstract class NFAAnalyser implements NFAAnalyserInterface {
 	protected IdaAnalysisResults idaUnprioritisedAnalysis(NFAGraph m) throws InterruptedException {		
 		NFAGraph unprioritisedNFAGraph = createUnprioritisedNFAGraph(m);
 		NFAGraph trimmedUPNFA = NFAAnalysisTools.makeTrimUPNFA(m, unprioritisedNFAGraph);
-		trimmedUPNFA = NFAAnalysisTools.makeTrim(trimmedUPNFA); // <-- XXX Remove if bad things happen (13-03-2017)
+		trimmedUPNFA = NFAAnalysisTools.makeTrim(trimmedUPNFA);
 		
 		if (isInterrupted()) {
 			throw new InterruptedException();

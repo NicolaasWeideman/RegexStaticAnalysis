@@ -23,6 +23,8 @@ import util.InterfaceSettings.InputType;
 
 public class Main {
 
+	private static final String HELP_FLAG = "--help";
+
 	private static final String SIMPLE_ANALYSIS_FLAG = "--simple";
 	private static final String FULL_ANALYSIS_FLAG = "--full";
 
@@ -32,16 +34,14 @@ public class Main {
 	private static final String JAVA_NFA_CONSTRUCTION_FLAG = "--java";
 	private static final String THOMPSON_NFA_CONSTRUCTION_FLAG = "--thompson";
 
-	private static final String FILE_INPUT_FLAG = "-i"; // To match the RXXR Tool
-	private static final String USER_INPUT_FLAG = "-u";
-	private static final String COMMAND_LINE_INPUT_FLAG = "-c";
-
 	private static final String TEST_IDA_SETTING = "--ida";
 	private static final String IS_VERBOSE_SETTING = "--verbose";
 	private static final String CONSTRUCT_EDA_EXPLOIT_STRING_SETTING = "--construct-eda-exploit-string";
 	private static final String TEST_EDA_EXPLOIT_STRING_SETTING = "--test-eda-exploit-string";
 	private static final String CONSTRUCT_IDA_EXPLOIT_STRING_SETTING = "--construct-ida-exploit-string";
 	private static final String TIMEOUT_SETTING = "--timeout";
+	private static final String FILE_INPUT_SETTING = "--if";
+	private static final String COMMAND_LINE_INPUT_SETTING = "--regex";
 
 
 	/* default settings */
@@ -65,11 +65,6 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		if (args.length == 0) {
-			printUsage();
-			System.exit(0);
-		}
-
 		commandLineFlags = new HashSet<String>();
 		commandLineSettings = new HashMap<String, String>();
 		commandLineValues = new ArrayList<String>();
@@ -88,6 +83,11 @@ public class Main {
 			}
 		}
 
+		if (commandLineFlags.contains(HELP_FLAG)) {
+			printUsage();
+			System.exit(0);
+		}
+
 		NFAConstruction nfaConstruction = determineNFAConstruction();
 		PreprocessingType preprocessingType = PreprocessingType.NONE;
 		EpsilonLoopRemovalStrategy epsilonLoopRemovalStrategy = determineEpsilonLoopRemovalStrategy();
@@ -103,7 +103,12 @@ public class Main {
 
 		boolean shouldConstructEdaExploitString = determineWhetherShouldConstructEdaExploitString();
 		
-		boolean shouldTestEdaExploitString = determineWhetherShouldTestEdaExploitString();
+		boolean shouldTestEdaExploitString;
+		if (shouldConstructEdaExploitString) {
+			shouldTestEdaExploitString = determineWhetherShouldTestEdaExploitString();
+		} else {
+			shouldTestEdaExploitString = false;
+		}
 		if (shouldTestEdaExploitString && nfaConstruction != NFAConstruction.JAVA) {
 			System.err.println("Warning: You cannot test the exploit strings for any construction other than Java. (setting test exploit string to false)");
 			shouldTestEdaExploitString = false;
@@ -176,23 +181,19 @@ public class Main {
 	}
 
 	private static InputType determineInputType() {
-		boolean containsUserInputFlag = commandLineFlags.contains(USER_INPUT_FLAG);
-		boolean containsFileInputFlag = commandLineFlags.contains(FILE_INPUT_FLAG);
-		boolean containsCommandLineInputFlag = commandLineFlags.contains(COMMAND_LINE_INPUT_FLAG);
+		boolean containsFileInputSetting = commandLineSettings.containsKey(FILE_INPUT_SETTING);
+		boolean containsCommandLineInputSetting = commandLineSettings.containsKey(COMMAND_LINE_INPUT_SETTING);
 
-		int numFlags = 0;
-		numFlags = containsUserInputFlag ? numFlags + 1 : numFlags;
-		numFlags = containsFileInputFlag ? numFlags + 1 : numFlags;
-		numFlags = containsCommandLineInputFlag ? numFlags + 1 : numFlags;
-		if (numFlags > 1) {
-			System.err.println("Contradicting flags for input method.");
+		int numSettings = 0;
+		numSettings = containsFileInputSetting ? numSettings + 1 : numSettings;
+		numSettings = containsCommandLineInputSetting ? numSettings + 1 : numSettings;
+		if (numSettings > 1) {
+			System.err.println("Contradicting settings for input method.");
 			printUsage();
 			System.exit(0);
-		} else if (containsUserInputFlag) {
-			return InputType.USER_INPUT;
-		} else if (containsFileInputFlag) {
+		} else if (containsFileInputSetting) {
 			return InputType.FILE_INPUT;
-		} else if (containsCommandLineInputFlag) {
+		} else if (containsCommandLineInputSetting) {
 			return InputType.COMMAND_LINE_INPUT;
 		}
 		return DEFAULT_INPUT_TYPE;
@@ -332,7 +333,7 @@ public class Main {
 			break;
 		case FILE_INPUT:
 			/* Find file name in first command line value */
-			String fileName = commandLineValues.get(0);
+			String fileName = commandLineSettings.get(FILE_INPUT_SETTING);
 			try {
 			regexesReader = new BufferedReader(new FileReader(fileName));
 			} catch (FileNotFoundException fnfe) {
@@ -342,7 +343,7 @@ public class Main {
 			break;
 		case COMMAND_LINE_INPUT:
 			/* Find regex in first command line value */
-			String regex = commandLineValues.get(0);
+			String regex = commandLineSettings.get(COMMAND_LINE_INPUT_SETTING);
 			InputStream inputStreamReader = new ByteArrayInputStream(regex.getBytes());
 			regexesReader = new BufferedReader(new InputStreamReader(inputStreamReader));
 			break;
@@ -353,7 +354,7 @@ public class Main {
 	}
 
 	private static void printUsage() {
-		System.out.println("usage: java -cp ./bin Main [--simple|--full] [--merge|--flatten] [--java|--thompson] [-i 'inputfile.txt'|-c 'regex' |-u] [--ida=true|false] [--verbose=true|false] [--textexploitstring=true|false] [--timeout=d]");
+		System.out.println("usage: java -cp ./bin Main [--simple|--full] [--merge|--flatten] [--java|--thompson] [--if='inputfile.txt'|--regex='regex' |] [--ida=true|false] [--verbose=true|false] [--textexploitstring=true|false] [--timeout=d]");
 		System.out.println("\tsimple:");
 		System.out.println("\t\tPerform the simple analysis.");
 		System.out.println("\tfull:");
@@ -366,12 +367,10 @@ public class Main {
 		System.out.println("\t\tConstruct the pNFAs to approximate Java behaviour.");
 		System.out.println("\tthompson:");
 		System.out.println("\t\tConstruct the pNFAs using Thompson construction.");
-		System.out.println("\ti 'inputfile.txt':");
+		System.out.println("\tif='inputfile.txt':");
 		System.out.println("\t\tAnalyse the regexes read from an input file named inputfile.txt.");
-		System.out.println("\tc 'regex':");
+		System.out.println("\tregex='regex to analyse':");
 		System.out.println("\t\tAnalyse the one regex specified in the command line argument 'regex'.");
-		System.out.println("\tu:");
-		System.out.println("\t\tAnalyse the regexes read from stdin.");
 		System.out.println("\tida=[true|false]:");
 		System.out.println("\t\tTrue: Test for IDA aswell as EDA.");
 		System.out.println("\t\tFalse: Only test for EDA.");

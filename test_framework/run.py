@@ -1,9 +1,9 @@
 import subprocess
 import re
-import datetime
 import os
 import sys
 import time
+import datetime
 import operator
 
 PATH_TO_ROOT = '../'
@@ -15,21 +15,33 @@ CLASS_PATH = '/bin/'
 
 PATH_TO_TESTS = PATH_TO_ROOT + 'tests/'
 
-TIMEOUT = "300"
+DEFAULT_TIMEOUT = "10"
+timeout = DEFAULT_TIMEOUT
 
-TIME_FORMAT = "%H:%M:%S, %A, %d %B %Y"
+
+TIME_FORMAT = "%H:%M:%S, %9A, %d-%m-%Y"
 
 def main(argv):
+	global timeout
 	if len(argv) < 2:
 		print "usage: python ./" + argv[0] + " test_file1 test_file2 ..."
 		return
-	for test_file in argv[1:]:
+	test_files = []
+	for arg in argv[1:]:
+		match = re.search(r'^--timeout=(\d+)', arg)
+		if match:
+			timeout = match.group(1)
+		else:
+			test_files.append(arg)
+			
+	for test_file in test_files:
 		print "Test file: " + test_file
 		analyse_regexes_file(test_file)
 		print "========================"
 
 
 def analyse_regexes_file(test_file_name):
+	global_start_time = time.localtime()
 	#f = open(PATH_TO_TESTS + TEST_FILE_NAME, 'r')
 	f = open(test_file_name, 'r')
 	all_regexes = f.readlines()
@@ -92,6 +104,17 @@ def analyse_regexes_file(test_file_name):
 	ida_regexes_file.close()
 	fda_regexes_numbered_file.close()
 	fda_regexes_file.close()
+
+	simple_analysis_timeout_regexes_file = open(results_directory + '/simple_analysis_timeout_' + str(timeout) + 's_regexes.txt', 'w')
+	simple_analysis_timeout_regexes_numbered_file = open(results_directory + '/simple_analysis_timeout_' + str(timeout) + 's_regexes_numbered.txt', 'w')
+	timeout_regexes_matches = re.findall(r'(\d+): ([^\n]*)\nTIMEOUT in (?:E|I)DA', simple_analysis_summary_removed, re.MULTILINE)
+	for timeout_regexes_match in timeout_regexes_matches:
+		timeout_regex_number = timeout_regexes_match[0]
+		timeout_regex = timeout_regexes_match[1]
+		simple_analysis_timeout_regexes_file.write(timeout_regex + "\n")
+		simple_analysis_timeout_regexes_numbered_file.write(timeout_regex_number + ": " + timeout_regex + "\n")
+	simple_analysis_timeout_regexes_file.close()
+	simple_analysis_timeout_regexes_numbered_file.close()
 	
 
 	# Running full analysis for simple analysis eda regexes
@@ -112,9 +135,38 @@ def analyse_regexes_file(test_file_name):
 	full_analysis_fda_results_file.write(full_analysis_fda_results)
 	full_analysis_fda_results_file.close()
 
+	global_end_time = time.localtime()
+
+	global_end_time_datetime = datetime.datetime.fromtimestamp(time.mktime(global_end_time))
+	global_start_time_datetime = datetime.datetime.fromtimestamp(time.mktime(global_start_time))
+	global_run_time_datetime = global_end_time_datetime - global_start_time_datetime
+	seconds = int(global_run_time_datetime.seconds)
+	days, seconds = divmod(seconds, 86400)
+	hours, seconds = divmod(seconds, 3600)
+	minutes, seconds = divmod(seconds, 60)
+	global_run_time_str = "{0} days, {1} hours, {2:02d} minutes and {3:02d} seconds.".format(days, hours, minutes, seconds)
+
+	# Extracting Timeout regexes from full analyses
+	full_analysis_timeout_regexes_file = open(results_directory + '/full_analysis_timeout_' + str(timeout) + 's_regexes.txt', 'w')
+	full_analysis_timeout_regexes_numbered_file = open(results_directory + '/full_analysis_timeout_' + str(timeout) + 's_regexes_numbered.txt', 'w')
+	timeout_regexes_matches_eda = re.findall(r'(\d+): ([^\n]*)\nTIMEOUT in (?:E|I)DA', full_analysis_eda_results, re.MULTILINE)
+	timeout_regexes_matches_ida = re.findall(r'(\d+): ([^\n]*)\nTIMEOUT in (?:E|I)DA', full_analysis_ida_results, re.MULTILINE)
+	timeout_regexes_matches_fda = re.findall(r'(\d+): ([^\n]*)\nTIMEOUT in (?:E|I)DA', full_analysis_fda_results, re.MULTILINE)
+	timeout_regexes_matches = timeout_regexes_matches_eda + timeout_regexes_matches_ida + timeout_regexes_matches_fda
+	for timeout_regexes_match in timeout_regexes_matches:
+		timeout_regex_number = timeout_regexes_match[0]
+		timeout_regex = timeout_regexes_match[1]
+		full_analysis_timeout_regexes_file.write(timeout_regex + "\n")
+		full_analysis_timeout_regexes_numbered_file.write(timeout_regex_number + ": " + timeout_regex + "\n")
+	full_analysis_timeout_regexes_file.close()
+	full_analysis_timeout_regexes_numbered_file.close()
+
 	# Creating a summary
 	summary_file = open(results_directory + '/summary.txt', 'w')
-	summary_file.write("Timeout: " + str(TIMEOUT) + '\n')
+	summary_file.write("Timeout: " + str(timeout) + '\n')
+	summary_file.write("Start time: " + time.strftime(TIME_FORMAT, global_start_time) + '\n')
+	summary_file.write("End time:   " + time.strftime(TIME_FORMAT, global_end_time) + '\n')
+	summary_file.write("Duration:   " + global_run_time_str + '\n')
 	summary_file.write("=====Simple Analysis (total: " + str(num_test_cases) + "):=====\n")
 	simple_analysis_eda_matches = re.findall(r'(\d+): ([^\n]*)\nEDA', simple_analysis_summary_removed, re.MULTILINE)
 	simple_analysis_num_eda = len(simple_analysis_eda_matches)
@@ -389,7 +441,7 @@ def run_analysis(analysis_type, test_file_name, construct_eda_exploit_string, te
 	current_num_to_in_eda = 0
 	current_num_to_in_ida = 0
 	updated = False
-	proc = subprocess.Popen([JAVA, MEMORY_SETTINGS, '-cp', PATH_TO_ROOT + CLASS_PATH, 'driver.Main', analysis_type, '--construct-eda-exploit-string=' + construct_eda_exploit_string, '--test-eda-exploit-string=' + test_eda_exploit_string, '--construct-ida-exploit-string=' + construct_ida_exploit_string, '--timeout=' + TIMEOUT, '--verbose=false', '-i', test_file_name], stdout=subprocess.PIPE)
+	proc = subprocess.Popen([JAVA, MEMORY_SETTINGS, '-cp', PATH_TO_ROOT + CLASS_PATH, 'driver.Main', analysis_type, '--construct-eda-exploit-string=' + construct_eda_exploit_string, '--test-eda-exploit-string=' + test_eda_exploit_string, '--construct-ida-exploit-string=' + construct_ida_exploit_string, '--timeout=' + timeout, '--verbose=false', '--if=' + test_file_name], stdout=subprocess.PIPE)
 	while True:
 		line = proc.stdout.readline()
 		if line != '':
