@@ -354,7 +354,7 @@ public class Main {
 	}
 
 	private static void printUsage() {
-		System.out.println("usage: java -cp ./bin Main [--simple|--full] [--merge|--flatten] [--java|--thompson] [--if='inputfile.txt'|--regex='regex' |] [--ida=true|false] [--verbose=true|false] [--textexploitstring=true|false] [--timeout=d]");
+		System.out.println("usage: java -cp ./bin Main [--simple|--full] [--merge|--flatten] [--java|--thompson] [--if='inputfile.txt'|--regex='regex' |] [--ida=true|false] [--verbose=true|false] [--test-eda-exploit-string=true|false] [--timeout=d]");
 		System.out.println("\tsimple:");
 		System.out.println("\t\tPerform the simple analysis.");
 		System.out.println("\tfull:");
@@ -377,7 +377,7 @@ public class Main {
 		System.out.println("\tverbose=[true|false]:");
 		System.out.println("\t\tTrue: Print verbose output.");
 		System.out.println("\t\tFalse: Do not print verbose output.");
-		System.out.println("\ttestexploitstring=[true|false]:");
+		System.out.println("\ttest-eda-exploit-string=[true|false]:");
 		System.out.println("\t\tTrue: Test the generated exploit strings on the corresponding regexes for exponential behaviour using the Java matcher (only valid when using Java construction (--java)), testing regexes for polynomial behaviour is not yet implented.");
 		System.out.println("\t\tFalse: Do not test the generated exploit strings.");
 		System.out.println("\ttimeout=d:");
