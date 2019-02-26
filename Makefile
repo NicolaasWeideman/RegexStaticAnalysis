@@ -3,7 +3,12 @@ SRC_PATH ?= src
 BIN_PATH ?= bin
 JGRAPHT_CLASS_PATH ?= jgrapht/jgrapht-core/src/main/java
 EXTERNAL_JARS_PATHS ?= lib/gson-2.8.2.jar
-FLAGS ?= -Xlint -cp "$(SRC_PATH):$(JGRAPHT_CLASS_PATH):$(EXTERNAL_JARS_PATHS)" -d $(BIN_PATH)
+ifeq ($(OS),Windows_NT)
+	COMPILE_CLASS_PATH ?= "$(SRC_PATH);$(JGRAPHT_CLASS_PATH);$(EXTERNAL_JARS_PATHS)"
+else
+	COMPILE_CLASS_PATH ?= "$(SRC_PATH):$(JGRAPHT_CLASS_PATH):$(EXTERNAL_JARS_PATHS)"
+endif
+FLAGS ?= -Xlint -cp $(COMPILE_CLASS_PATH) -d $(BIN_PATH)
 JAR_NAME ?= RegexStaticAnalysis.jar
 
 
