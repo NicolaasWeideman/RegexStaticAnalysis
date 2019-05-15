@@ -290,7 +290,7 @@ public class TransitionLabelParserRecursive {
 		StringBuilder hexNumberStr = new StringBuilder();
 		/* Read next four symbols as hex number */
 		hexNumberStr.append(currentSymbol);
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 3; i++) {
 			consumeSymbol();
 			hexNumberStr.append(currentSymbol);			
 			
