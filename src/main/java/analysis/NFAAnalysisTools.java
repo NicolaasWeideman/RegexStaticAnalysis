@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import org.jgrapht.alg.StrongConnectivityInspector;
-import org.jgrapht.graph.DirectedSubgraph;
+import org.jgrapht.Graph;
+import org.jgrapht.alg.connectivity.KosarajuStrongConnectivityInspector;
 
 import nfa.NFAGraph;
 import nfa.NFAVertexND;
@@ -531,11 +531,11 @@ public class NFAAnalysisTools {
 	 * @throws InterruptedException 
 	 */
 	public static LinkedList<NFAGraph> getStronglyConnectedComponents(NFAGraph m) throws InterruptedException {
-		StrongConnectivityInspector<NFAVertexND, NFAEdge> sci = new StrongConnectivityInspector<NFAVertexND, NFAEdge>(m);
-		List<DirectedSubgraph<NFAVertexND, NFAEdge>> sccs = sci.stronglyConnectedSubgraphs();
+		KosarajuStrongConnectivityInspector<NFAVertexND, NFAEdge> sci = new KosarajuStrongConnectivityInspector<NFAVertexND, NFAEdge>(m);
+		List<Graph<NFAVertexND, NFAEdge>> sccs = sci.getStronglyConnectedComponents();
 		LinkedList<NFAGraph> sccNFAs = new LinkedList<NFAGraph>();
 
-		for (DirectedSubgraph<NFAVertexND, NFAEdge> scc : sccs) {
+		for (Graph<NFAVertexND, NFAEdge> scc : sccs) {
 			if (isInterrupted()) {
 				throw new InterruptedException();
 			}
